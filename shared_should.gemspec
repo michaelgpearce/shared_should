@@ -25,6 +25,7 @@ Gem::Specification.new do |s|
     "Rakefile",
     "VERSION",
     "lib/shared_should.rb",
+    "shared_should.gemspec",
     "test/helper.rb",
     "test/test_helper.rb",
     "test/test_shared_should.rb",

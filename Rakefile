@@ -15,14 +15,14 @@ Jeweler::Tasks.new do |gem|
   gem.name = "shared_should"
   gem.homepage = "http://github.com/michaelgpearce/shared_should"
   gem.license = "MIT"
-  gem.summary = %Q{Shared Should}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{Share and reuse shoulds, contexts, and setup in Shoulda.}
+  gem.description = %Q{Share and reuse shoulds, contexts, and setup in Shoulda.}
   gem.email = "michael.pearce@bookrenter.com"
   gem.authors = ["Michael Pearce"]
   # Include your dependencies below. Runtime dependencies are required when using your gem,
   # and development dependencies are only needed for development (ie running rake tasks, tests, etc)
-  #  gem.add_runtime_dependency 'jabber4r', '> 0.1'
-  #  gem.add_development_dependency 'rspec', '> 1.2.3'
+  gem.add_runtime_dependency 'shoulda', '>= 0'
+  gem.add_development_dependency 'shoulda', '>= 0'
 end
 Jeweler::RubygemsDotOrgTasks.new
 

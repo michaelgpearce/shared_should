@@ -3,7 +3,7 @@ require 'shoulda'
 class Shoulda::Context
   def method_missing(method, *args, &blk)
     current_context = self
-    while current_context.kind_of?(Shoulda::Context) || current_context < Test::Unit::TestCase do
+    while current_context && (current_context.kind_of?(Shoulda::Context) || current_context < Test::Unit::TestCase) do
       if Test::Unit::TestCase.shared_context_block_owner(current_context).shared_context_blocks[method.to_s]
         current_context.send(method, args[0], self, &blk)
         return

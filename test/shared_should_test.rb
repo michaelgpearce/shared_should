@@ -1,6 +1,15 @@
 require 'test_helper'
 
 class SharedShouldTest < Test::Unit::TestCase
+  def setup
+    super
+    @setup_instance_method_executed = true
+  end
+  
+  should "execute setup instance method" do
+    assert @setup_instance_method_executed
+  end
+  
   context ".shared_context_for" do
     context "without params" do
       shared_context_for "a valid value" do
@@ -332,16 +341,16 @@ class SharedShouldTest < Test::Unit::TestCase
   
   # test class as context
   shared_setup_for("a true value in class") do
-    @value = false
+    @class_value = true
   end
   
   shared_should_for("a valid should test in class") do
-    assert @value
+    assert @class_value
   end
   
   shared_context_for("a valid context test in class") do
     should "have a true value" do
-      assert @value
+      assert @class_value
     end
   end
 
@@ -388,7 +397,9 @@ class SharedShouldTest < Test::Unit::TestCase
     "test: parameterized block with an array for be valid with shared context should do something with value block param. ",
     "test: parameterized block with an array for be valid with shared context should do something with value block params. ",
     "test: parameterized block with an array should be be valid with shared should. ",
-#    "test: should be a valid should test in class. "
+    "test:  should be a valid should test in class. ",
+    "test: for a valid context test in class should have a true value. ",
+    "test: SharedShould should execute setup instance method. "
   ].each do |method_name|
     raise "Test method not found: '#{method_name}'" unless test_method_names.include?(method_name)
   end

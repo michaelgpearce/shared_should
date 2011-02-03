@@ -16,13 +16,37 @@ end
 class Test::Unit::TestCase
   attr_accessor :shared_value
   attr_accessor :shared_name
+  @@shared_proxies_executed = false
+  @@setup_blocks = []
 
+  class << self
+    # these methods need to be aliased for both the test class and the should context
+    alias_method :suite_without_shared_should_execute, :suite
+  end
+  
+  def self.suite
+    unless @@shared_proxies_executed
+      shared_proxies.each do |shared_proxy|
+        shared_proxy.execute(self)
+      end
+      @@shared_proxies_executed = true
+    end
+    
+    suite_without_shared_should_execute
+  end
+  
   def self.shared_context_block_owner(context_or_test_class)
     return context_or_test_class.kind_of?(Shoulda::Context) ? context_or_test_class : Test::Unit::TestCase
   end
 
-  def self.setup
-    # TODO
+  def setup
+    @@setup_blocks.each do |setup_block|
+      setup_block.bind(self).call
+    end
+  end
+
+  def self.setup(&setup_block)
+    @@setup_blocks << setup_block
   end
   
   def self.parent

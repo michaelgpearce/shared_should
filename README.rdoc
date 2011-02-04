@@ -9,13 +9,13 @@ Here are some examples to demonstrate usage. The domain is renting textbooks - a
 
 == Quick-Start Examples (declaring and invoking shared functionality)
 
-*Some* quick examples to get you started using Shared Should.
+Some quick examples to get you started using Shared Should.
 
 === Shared Should
 
   context "Book" do
     # declaration
-    <em>shared_should_be</em> "available for checkout" { assert @book.available_for_checkout? }
+    shared_should_be "available for checkout" { assert @book.available_for_checkout? }
     
     context "with an in-stock rentable book" do
       setup { @book = Book.new(:quantity => 1, :price => 10_00, :rentable => true }

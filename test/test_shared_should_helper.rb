@@ -6,7 +6,7 @@ class SubclassTestCase < Test::Unit::TestCase
     assert @value
   end
   
-  shared_should_for "a true value for shared should helper" do
+  shared_should_be "a true value for shared should helper" do
     assert @value
   end
   

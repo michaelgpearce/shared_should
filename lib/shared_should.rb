@@ -180,10 +180,10 @@ module Shoulda::SharedContext
     end
 
     def shared_should(shared_should_name, &shared_should_block)
-      shared_should_for(shared_should_name, &shared_should_block)
+      shared_should_be(shared_should_name, &shared_should_block)
     end
 
-    def shared_should_for(shared_should_name, &shared_should_block)
+    def shared_should_be(shared_should_name, &shared_should_block)
       shared_context_block = Proc.new do
         should "be #{shared_should_name}" do
           call_block_with_shared_value(shared_should_block)

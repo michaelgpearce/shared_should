@@ -68,7 +68,7 @@ Sharing setups is easy, too.
   
 === Shared Context
 
-Sharing whole contexts? No problem.
+Sharing whole contexts? Schmeasy!
 
   context "Book" do
     context "with an in-stock book" do

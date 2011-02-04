@@ -105,9 +105,11 @@ Sharing whole contexts? No problem.
 
 === Finding Your Share
 
-When <tt>should_be</tt> or <tt>setup_for</tt> is invoked, it searches up the context hierarchy to find a matching shared definition.  You can redefine your shares in descendant contexts. Shares defined at the root (on your TestCase) are available in all contexts.
-
-NOTE: if you define a shared setup at the root level, you will need to call <tt>super</tt> if you have a setup instance method for your test.
+Some rules:
+* When <tt>should_be</tt> or <tt>setup_for</tt> is invoked, it searches up the context hierarchy to find a matching shared definition.
+* You can redefine your shares by using the same name. These shares will only be available in in the current and descendant contexts.
+* Shares defined at the root (on your TestCase) are available in all contexts.
+* If you define a shared setup at the root level, you will need to call <tt>super</tt> if you have a setup instance method for your test.
 
 === Initialization Block
 

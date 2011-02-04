@@ -1,6 +1,6 @@
 = Shared Should - Share and reuse shoulds, contexts, and setups with Shoulda - easy, schmeasy.
 
-Shared Should allows for a easy creation of reusable shoulds, contexts and setups with familiar looking Shoulda syntax. Inspired by Rspec's shared example groups for context reuse, Shared Should allows sharing of contexts, shoulds,
+Shared Should allows you to easily create reusable shoulds, contexts and setups with familiar looking Shoulda syntax. Inspired by Rspec's shared example groups for context reuse, Shared Should allows sharing of contexts, shoulds,
 and setup blocks.  Shared Should goes even further by allowing an initialization block and parameterization to fine-tune the usage of the shared functionality.
 
 == Quick-Start Examples

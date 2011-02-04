@@ -17,20 +17,20 @@ Some quick examples to get you started using Shared Should.
     context "with an in-stock book" do
       setup { @book = Book.new(:quantity => 1, :price => 10_00 }
       
-      ### define a shared should
+      ### Define a shared should
       shared_should_be "available for checkout" { assert @book.available_for_checkout? }
 
       context "with a rentable book" do
         setup { @book.rentable = true }
 
-        ### use the "available for checkout" shared_should with should_be
+        ### Use the "available for checkout" shared_should with should_be
         should_be "available for checkout"
       end
 
       context "with a purchasable book" do
         setup { @book.purchasable = true }
 
-        ### use the "available for checkout" shared_should in this context too
+        ### Use the "available for checkout" shared_should in this context too
         should_be "available for checkout"
       end
       
@@ -43,21 +43,21 @@ Some quick examples to get you started using Shared Should.
 === Shared Setup
 
   context "Book" do
-    ### define a shared setup
+    ### Define a shared setup
     shared_setup_for "an in-stock book" { @book = Book.new(:quantity => 1, :price => 10_00) }
     
     context "with an in-stock rentable book" do
-      ### use the shared setup here
+      ### Use the shared setup here
       setup_for "an in-stock book"
       
-      ### do some additional setup after the shared setup
+      ### Do some additional setup after the shared setup
       setup { @book.rentable = true }
       
       should "be available for checkout" { assert @book.available_for_checkout? }
     end
     
     context "with an in-stock purchasable book" do
-      ### use the shared setup again
+      ### Use the shared setup again
       setup_for "an in-stock book"
       
       setup { @book.purchasable = true }
@@ -72,7 +72,7 @@ Some quick examples to get you started using Shared Should.
     context "with an in-stock book" do
       setup { @book = Book.new(:quantity => 1, :price => 10_00) }
     
-      ### define a shared context
+      ### Define a shared context
       shared_context_for "a book available for checkout" do
         should "be in stock" { assert @book.quantity > 0 }
         should "have a non-negative price" { assert @book.price > 0 }
@@ -82,14 +82,14 @@ Some quick examples to get you started using Shared Should.
       context "with a rentable book" do
         setup { @book.rentable = true }
       
-        ### run the shoulds inside the shared context with a rentable book
+        ### Run the shoulds inside the shared context with a rentable book
         should_be "a book available for checkout"
       end
     
       context "with a purchasable book" do
         setup { @book.purchasable = true }
       
-        ### run the shoulds inside the shared context again with a purchasable book
+        ### Run the shoulds inside the shared context again with a purchasable book
         should_be "a book available for checkout"
       end
       

@@ -13,9 +13,10 @@ Some quick examples to get you started using Shared Should.
 
 === Shared Should
 
+<pre>
   context "Book" do
     # declaration
-    shared_should_be "available for checkout" { assert @book.available_for_checkout? }
+    <em>shared_should_be</em> "available for checkout" { assert @book.available_for_checkout? }
     
     context "with an in-stock rentable book" do
       setup { @book = Book.new(:quantity => 1, :price => 10_00, :rentable => true }
@@ -31,6 +32,7 @@ Some quick examples to get you started using Shared Should.
       should_be "available for checkout"
     end
   end
+</pre>
 
 === Shared Setup
 

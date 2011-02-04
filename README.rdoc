@@ -67,8 +67,19 @@ Some quick examples to get you started using Shared Should.
       should "be rentable or purchasable" { assert @book.rentable || @book.purchasable }
     end
     
-    # invocation
-    should_be "a book available for checkout"
+    context "with an in-stock rentable book" do
+      setup { @book.rentable = true }
+      
+      # invocation
+      should_be "a book available for checkout"
+    end
+    
+    context "with an in-stock purchasable book" do
+      setup { @book.purchasable = true }
+      
+      # invocation
+      should_be "a book available for checkout"
+    end
   end
   
 == Initialization Block

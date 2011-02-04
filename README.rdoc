@@ -14,41 +14,52 @@ Some quick examples to get you started using Shared Should.
 === Shared Should
 
   context "Book" do
-    # declaration
-    shared_should_be "available for checkout" { assert @book.available_for_checkout? }
-    
-    context "with an in-stock rentable book" do
-      setup { @book = Book.new(:quantity => 1, :price => 10_00, :rentable => true }
+    context "with an in-stock book" do
+      setup { @book = Book.new(:quantity => 1, :price => 10_00 }
       
-      #invocation
-      should_be "available for checkout"
-    end
-    
-    context "with an in-stock purchasable book" do
-      setup { @book = Book.new(:quantity => 1, :price => 10_00, :purchasable => true }
+      ### define a shared should
+      shared_should_be "available for checkout" { assert @book.available_for_checkout? }
+
+      context "with a rentable book" do
+        setup { @book.rentable = true }
+
+        ### use the "available for checkout" shared_should with should_be
+        should_be "available for checkout"
+      end
+
+      context "with a purchasable book" do
+        setup { @book.purchasable = true }
+
+        ### use the "available for checkout" shared_should in this context too
+        should_be "available for checkout"
+      end
       
-      #invocation
-      should_be "available for checkout"
+      ### ...or DRY it up by using .with or .when and an initialization block
+      should_be("available for checkout").when("rentable") { @book.rentable = true }
+      should_be("available for checkout").when("purchasable") { @book.purchasable = true }
     end
   end
 
 === Shared Setup
 
   context "Book" do
-    # declaration
+    ### define a shared setup
     shared_setup_for "an in-stock book" { @book = Book.new(:quantity => 1, :price => 10_00) }
     
     context "with an in-stock rentable book" do
-      # invocation
+      ### use the shared setup here
       setup_for "an in-stock book"
+      
+      ### do some additional setup after the shared setup
       setup { @book.rentable = true }
       
       should "be available for checkout" { assert @book.available_for_checkout? }
     end
     
     context "with an in-stock purchasable book" do
-      # invocation
+      ### use the shared setup again
       setup_for "an in-stock book"
+      
       setup { @book.purchasable = true }
       
       should "be available for checkout" { assert @book.available_for_checkout? }
@@ -58,27 +69,33 @@ Some quick examples to get you started using Shared Should.
 === Shared Context
 
   context "Book" do
-    setup { @book = Book.new(:quantity => 1, :price => 10_00) }
+    context "with an in-stock book" do
+      setup { @book = Book.new(:quantity => 1, :price => 10_00) }
     
-    # declaration
-    shared_context_for "a book available for checkout" do
-      should "be in stock" { assert @book.quantity > 0 }
-      should "have a non-negative price" { assert @book.price > 0 }
-      should "be rentable or purchasable" { assert @book.rentable || @book.purchasable }
-    end
+      ### define a shared context
+      shared_context_for "a book available for checkout" do
+        should "be in stock" { assert @book.quantity > 0 }
+        should "have a non-negative price" { assert @book.price > 0 }
+        should "be rentable or purchasable" { assert @book.rentable || @book.purchasable }
+      end
     
-    context "with an in-stock rentable book" do
-      setup { @book.rentable = true }
+      context "with a rentable book" do
+        setup { @book.rentable = true }
       
-      # invocation
-      should_be "a book available for checkout"
-    end
+        ### run the shoulds inside the shared context with a rentable book
+        should_be "a book available for checkout"
+      end
     
-    context "with an in-stock purchasable book" do
-      setup { @book.purchasable = true }
+      context "with a purchasable book" do
+        setup { @book.purchasable = true }
       
-      # invocation
-      should_be "a book available for checkout"
+        ### run the shoulds inside the shared context again with a purchasable book
+        should_be "a book available for checkout"
+      end
+      
+      ### ...or DRY it up by using .with or .when and an initialization block
+      should_be("a book available for checkout").when("rentable") { @book.rentable = true }
+      should_be("a book available for checkout").when("purchasable") { @book.purchasable = true }
     end
   end
   

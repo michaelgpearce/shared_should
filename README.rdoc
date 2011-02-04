@@ -202,7 +202,7 @@ The shared functions also accept multiple parameters when the initialization blo
 
 === Creating a Library of Shared Functionality
 
-The shared functions can also be re-usable across multiple tests.
+The shared functions can also be re-usable across multiple test cases.
 
 In your test helper file:
 

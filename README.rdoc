@@ -71,7 +71,7 @@ Some quick examples to get you started using Shared Should.
     should_be "a book available for checkout"
   end
   
-== Initialization
+== Initialization Block
 
 The shared invocation also accepts an initialization block by chaining <tt>when</tt> or <tt>with</tt>. This block can be used to create or modify instance variables used by the shared functionality.  It always executes before the shared functionality.
 
@@ -90,7 +90,7 @@ The shared invocation also accepts an initialization block by chaining <tt>when<
     end
   end
 
-== Parameterization
+== Parameterizing Shares
 
 Shared functions can also be parameterized using block parameters. This can be done for shared setups, shoulds, and setups and shoulds contained within a shared context. The value passed to the declared shared function is the return value of the initialization block. The below example parameterizes a shared setup.
 

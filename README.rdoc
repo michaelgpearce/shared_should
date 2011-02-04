@@ -3,15 +3,13 @@
 Shared Should allows for a easy creation of reusable shoulds, contexts and setups with familiar looking Shoulda syntax. Inspired by Rspec's shared example groups for context reuse, Shared Should allows sharing of contexts, shoulds,
 and setup blocks.  Shared Should goes even further by allowing an initialization block and parameterization to fine-tune the usage of the shared functionality.
 
-= Syntax and Usage
-
-Here are some examples to demonstrate usage. The domain is renting textbooks - as we do at Bookrenter.com.
-
 == Quick-Start Examples (declaring and invoking shared functionality)
 
-Some quick examples to get you started using Shared Should.
+Some quick examples to get you started using Shared Should. The domain is renting textbooks - as we do at Bookrenter.com.
 
 === Shared Should
+
+Sharing shoulds is easy.
 
   context "Book" do
     context "with an in-stock book" do
@@ -42,6 +40,8 @@ Some quick examples to get you started using Shared Should.
 
 === Shared Setup
 
+Sharing setups is easy, too.
+
   context "Book" do
     ### Define a shared setup
     shared_setup_for "an in-stock book" { @book = Book.new(:quantity => 1, :price => 10_00) }
@@ -67,6 +67,8 @@ Some quick examples to get you started using Shared Should.
   end
   
 === Shared Context
+
+Sharing whole contexts? No problem.
 
   context "Book" do
     context "with an in-stock book" do
@@ -98,10 +100,16 @@ Some quick examples to get you started using Shared Should.
       should_be("a book available for checkout").when("purchasable") { @book.purchasable = true }
     end
   end
-  
+
+= More Information on Syntax and Usage
+
+== Finding Shared Functionality
+
+Shared should invocations search up the context hierarchy to find a matching shared definition.  You can redefine your shares in ancestor contexts.
+
 == Initialization Block
 
-The shared invocation also accepts an initialization block by chaining <tt>when</tt> or <tt>with</tt>. This block can be used to create or modify instance variables used by the shared functionality.  It always executes before the shared functionality.
+The shared invocation accepts an initialization block by chaining <tt>when</tt> or <tt>with</tt>. This block can be used to create or modify instance variables used by the shared functionality.  It always executes before the shared functionality.
 
   context "Book" do
     setup { @book = Book.new(:quantity => 1, :price => 10_00) }
@@ -120,7 +128,7 @@ The shared invocation also accepts an initialization block by chaining <tt>when<
 
 == Parameterizing Shares
 
-Shared functions can also be parameterized using block parameters. This can be done for shared setups, shoulds, and setups and shoulds contained within a shared context. The value passed to the declared shared function is the return value of the initialization block. The below example parameterizes a shared setup.
+Shared functions can also be parameterized using block parameters. This can be done for shared setups, shoulds, and the setups and shoulds contained within a shared context. The value passed to the declared shared function is the return value of the initialization block. The below example parameterizes a shared setup.
 
   context "Book" do
     shared_setup_for "an in-stock book" do |rentable|
@@ -168,7 +176,7 @@ The shared functions also accept multiple parameters when the initialization blo
     end
   end
 
-== Library of Shared Functionality
+== Creating a Library of Shared Functionality
 
 The shared functions can also be re-usable across multiple tests.
 

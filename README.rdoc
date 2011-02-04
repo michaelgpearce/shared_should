@@ -101,13 +101,13 @@ Sharing whole contexts? No problem.
     end
   end
 
-= More Information on Syntax and Usage
+== More Information on Syntax and Usage
 
-== Finding Shared Functionality
+=== Finding Shared Functionality
 
 Shared should invocations search up the context hierarchy to find a matching shared definition.  You can redefine your shares in ancestor contexts.
 
-== Initialization Block
+=== Initialization Block
 
 The shared invocation accepts an initialization block by chaining <tt>when</tt> or <tt>with</tt>. This block can be used to create or modify instance variables used by the shared functionality.  It always executes before the shared functionality.
 
@@ -126,7 +126,7 @@ The shared invocation accepts an initialization block by chaining <tt>when</tt> 
     end
   end
 
-== Parameterizing Shares
+=== Parameterizing Shares
 
 Shared functions can also be parameterized using block parameters. This can be done for shared setups, shoulds, and the setups and shoulds contained within a shared context. The value passed to the declared shared function is the return value of the initialization block. The below example parameterizes a shared setup.
 
@@ -176,7 +176,7 @@ The shared functions also accept multiple parameters when the initialization blo
     end
   end
 
-== Creating a Library of Shared Functionality
+=== Creating a Library of Shared Functionality
 
 The shared functions can also be re-usable across multiple tests.
 

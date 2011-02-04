@@ -5,7 +5,7 @@ and setup blocks.  Shared Should goes even further by allowing an initialization
 
 == Quick-Start Examples
 
-Some quick examples to get you started using Shared Should. The domain is renting textbooks - as we do at Bookrenter.com.
+Some quick examples to get you started using Shared Should. The domain is renting and purchasing textbooks - as we do at Bookrenter.com.
 
 === Shared Should
 

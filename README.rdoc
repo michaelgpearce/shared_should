@@ -7,53 +7,52 @@ and setup blocks.  Shared Should goes even further by allowing an initialization
 
 Here are some examples to demonstrate usage. The domain is renting textbooks - as we do at Bookrenter.com.
 
-== Declaration
+== Quick-Start Examples (declaring and invoking shared functionality)
 
-Shared functionality is declared using methods that start with (({shared_})): (({shared_setup_for})), (({shared_should_be})), (({shared_context_for})). These blocks are not immediately executed, but instead must be invoked (examples of invocation later...)
+Some quick examples to get you started using Shared Should.
 
-  shared_setup_for "an in-stock book" do
-    @book = Book.new(:quantity => 1, :price => 10_00, :rentable => false, :purchasable => false)
-  end
-
-  shared_should_be "available for rental" { assert @book.available_for_rental? }
-  
-  shared_context_for "a book available for checkout" do
-    should "be in stock" { assert @book.quantity > 0 }
-    should "have a non-negative price" { assert @book.price > 0 }
-  end
-  
-== Invocation
-
-Invocations of the shared functionality is done with the (({setup_for})) method for shared setups and  (({should_be})) for shared shoulds and shared contexts.  (See declarations above.)
+=== Shared Should
 
   context "Book" do
-    context "with a book available for rental" do
-      setup_for "an in-stock book"
+    setup { @book = Book.new }
     
-      # occurs after setup_for "an in-stock book" invocation since placed after
-      setup do
-        @book.rentable = true
-      end
-      
-      should_be "available for rental"
-      
-      should_be "a book available for checkout"
-    end
+    # declaration
+    shared_should_be "available for rental" { assert @book.available_for_rental? }
     
-    context "with a book available for purchase" do
-      setup_for "an in-stock book"
-  
-      setup do
-        @book.purchasable = true
-      end
-    
-      should_be "a book available for checkout"
-    end
+    #invocation
+    should_be "available for rental"
   end
 
+=== Shared Setup
+
+  context "Book" do
+    # declaration
+    shared_setup_for "an in-stock book" { @book = Book.new(:quantity => 1, :price => 10_00) }
+    
+    # invocation
+    setup_for "an in-stock book"
+    
+    should "be available for rental" { assert @book.available_for_rental? }
+  end
+  
+=== Shared Context
+
+  context "Book" do
+    setup { @book = Book.new(:quantity => 1, :price => 10_00) }
+    
+    # declaration
+    shared_context_for "a book available for checkout" do
+      should "be in stock" { assert @book.quantity > 0 }
+      should "have a non-negative price" { assert @book.price > 0 }
+    end
+    
+    # invocation
+    should_be "a book available for checkout"
+  end
+  
 == Initialization
 
-The shared invocation also accepts an initialization block by chaining (({when})) or (({with})). This block can be used to create or modify instance variables used by the shared functionality.  It always executes before the shared functionality.
+The shared invocation also accepts an initialization block by chaining <tt>when</tt> or <tt>with</tt>. This block can be used to create or modify instance variables used by the shared functionality.  It always executes before the shared functionality.
 
   context "with a book available for purchase" do
     setup_for "an in-stock book"

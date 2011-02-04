@@ -149,7 +149,7 @@ Here is a parameterized shared should.
 
   context "Book" do
     context "with in-stock book" do
-      setup { @book = Book.new(:quantity => 1, :price => 10_00) }
+      setup { @book = Book.new(:quantity => 1) }
     
       shared_should_be "unavailable for checkout for price" do |price|
         @book.price = price
@@ -158,6 +158,26 @@ Here is a parameterized shared should.
 
       should_be("unavailable for checkout for price").when("zero") { 0 }
       should_be("unavailable for checkout for price").when("negative") { -1 }
+    end
+  end
+
+And a parameterized shared context.
+
+  context "Book" do
+    context "with in-stock book" do
+      setup { @book = Book.new(:quantity => 1) }
+
+      shared_context_for "a book available for checkout at price" do
+        # parameters are on the setup and shoulds, not on the context
+        setup { |price| @book.price = price }
+        
+        # we could also access price in the should blocks, but we don't need it again
+        should "be in stock" { assert @book.quantity > 0 }
+        should "have a non-negative price" { assert @book.price > 0 }
+        should "be rentable or purchasable" { assert @book.rentable || @book.purchasable }
+      end
+
+      should_be("a book available for checkout at price").when("positive") { 10_00 }
     end
   end
 

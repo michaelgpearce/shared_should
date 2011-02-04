@@ -14,13 +14,22 @@ Some quick examples to get you started using Shared Should.
 === Shared Should
 
   context "Book" do
-    setup { @book = Book.new }
-    
     # declaration
-    shared_should_be "available for rental" { assert @book.available_for_rental? }
+    shared_should_be "available for checkout" { assert @book.available_for_checkout? }
     
-    #invocation
-    should_be "available for rental"
+    context "with an in-stock rentable book" do
+      setup { @book = Book.new(:quantity => 1, :price => 10_00, :rentable => true }
+      
+      #invocation
+      should_be "available for checkout"
+    end
+    
+    context "with an in-stock purchasable book" do
+      setup { @book = Book.new(:quantity => 1, :price => 10_00, :purchasable => true }
+      
+      #invocation
+      should_be "available for checkout"
+    end
   end
 
 === Shared Setup
@@ -29,10 +38,21 @@ Some quick examples to get you started using Shared Should.
     # declaration
     shared_setup_for "an in-stock book" { @book = Book.new(:quantity => 1, :price => 10_00) }
     
-    # invocation
-    setup_for "an in-stock book"
+    context "with an in-stock rentable book" do
+      # invocation
+      setup_for "an in-stock book"
+      setup { @book.rentable = true }
+      
+      should "be available for checkout" { assert @book.available_for_checkout? }
+    end
     
-    should "be available for rental" { assert @book.available_for_rental? }
+    context "with an in-stock purchasable book" do
+      # invocation
+      setup_for "an in-stock book"
+      setup { @book.purchasable = true }
+      
+      should "be available for checkout" { assert @book.available_for_checkout? }
+    end
   end
   
 === Shared Context
@@ -44,6 +64,7 @@ Some quick examples to get you started using Shared Should.
     shared_context_for "a book available for checkout" do
       should "be in stock" { assert @book.quantity > 0 }
       should "have a non-negative price" { assert @book.price > 0 }
+      should "be rentable or purchasable" { assert @book.rentable || @book.purchasable }
     end
     
     # invocation
@@ -54,54 +75,69 @@ Some quick examples to get you started using Shared Should.
 
 The shared invocation also accepts an initialization block by chaining <tt>when</tt> or <tt>with</tt>. This block can be used to create or modify instance variables used by the shared functionality.  It always executes before the shared functionality.
 
-  context "with a book available for purchase" do
-    setup_for "an in-stock book"
-
-    # when shared_should_be "a book available for checkout" is executed, @book will have purchasable equal to true
-    should_be "a book available for checkout".when("purchasable") { @book.purchasable = true }
+  context "Book" do
+    setup { @book = Book.new(:quantity => 1, :price => 10_00) }
+    
+    shared_should_be "available for checkout" { assert @book.available_for_checkout? }
+    
+    context "with a rentable book" do
+      # when shared_should_be "available for checkout" is executed, @book will have rentable equal to true
+      should_be "available for checkout".when("rentable") { @book.rentable = true }
+    end
+    
+    context "with a purchasable book" do
+      should_be "available for checkout".when("purchasable") { @book.purchasable = true }
+    end
   end
 
 == Parameterization
 
 Shared functions can also be parameterized using block parameters. This can be done for shared setups, shoulds, and setups and shoulds contained within a shared context. The value passed to the declared shared function is the return value of the initialization block. The below example parameterizes a shared setup.
 
-  shared_setup_for "an in-stock book" do |rentable|
-    @book = Book.new(:quantity => 1, :price => 10_00, :rentable => rentable, :purchasable => false)
-  end
+  context "Book" do
+    shared_setup_for "an in-stock book" do |rentable|
+      @book = Book.new(:quantity => 1, :price => 10_00, :rentable => rentable, :purchasable => false)
+    end
 
-  context "with a book available for rental" do
-    # the return value of the block is "true" which will be passed as the block parameter "rentable"
-    setup_for("an in-stock book").with("a rentable book") { true }
-    
-    should_be "available for rental"
+    context "with rentable book" do
+      # the return value of the block is "true" which will be passed as the block parameter "rentable"
+      setup_for("an in-stock book").with("a rentable book") { true }
+      
+      should "be available for checkout" { assert @book.available_for_checkout? }
+    end
   end
 
 Here is a parameterized shared should.
 
-  context "with in-stock book" do
-    setup_for "an in-stock book"
+  context "Book" do
+    context "with in-stock book" do
+      setup { @book = Book.new(:quantity => 1, :price => 10_00) }
     
-    shared_should_be "unrentable for price" do |price|
-      @book.price = price
-      assert_false @book.available_for_rental?
-    end
+      shared_should_be "unavailable for checkout for price" do |price|
+        @book.price = price
+        assert_false @book.available_for_checkout?
+      end
 
-    should_be("unrentable for price").when("zero") { 0 }
-    should_be("unrentable for price").when("negative") { -1 }
+      should_be("unavailable for checkout for price").when("zero") { 0 }
+      should_be("unavailable for checkout for price").when("negative") { -1 }
+    end
   end
 
 The shared functions also accept multiple parameters when the initialization block returns an array.
 
-  shared_setup_for "an in-stock book" do |rentable, purchasable|
-    @book = Book.new(:quantity => 1, :price => 10_00, :rentable => rentable, :purchasable => purchasable)
-  end
-
-  context "with a book available for rental and purchase" do
-    setup_for("an in-stock book").with("a rentable and purchasable book") { [true, true] }
+  context "Book" do
+    context "with rentable book" do
+      setup { @book = Book.new(:rentable => true) }
   
-    should_be "available for rental"
-    
-    should_be "available for purchase"
+      shared_should_be "unavailable for checkout for quantity and price" do |quantity, price|
+        @book.quantity = quantity
+        @book.price = price
+        assert_false @book.available_for_checkout?
+      end
+
+      should_be("unavailable for checkout for quantity and price").when("zero quantity") { [0, 10_00] }
+      should_be("unavailable for checkout for quantity and price").when("zero price") { [1, 0] }
+    end
   end
 
 == Library of Shared Functionality

@@ -1,19 +1,140 @@
-= shared_should
+= Shared Should - Share and reuse shoulds, contexts, and setups with Shoulda - easy, schmeasy.
 
-Description goes here.
+Shared Should allows for a easy creation of reusable shoulds, contexts and setups with familiar looking Shoulda syntax. Inspired by Rspec's shared example groups for context reuse, Shared Should allows sharing of contexts, shoulds,
+and setup blocks.  Shared Should goes even further by allowing an initialization block and parameterization to fine-tune the usage of the shared functionality.
 
-== Contributing to shared_should
- 
-* Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
-* Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it
-* Fork the project
-* Start a feature/bugfix branch
-* Commit and push until you are happy with your contribution
-* Make sure to add tests for it. This is important so I don't break it in a future version unintentionally.
-* Please try not to mess with the Rakefile, version, or history. If you want to have your own version, or is otherwise necessary, that is fine, but please isolate to its own commit so I can cherry-pick around it.
+= Syntax and Usage
 
-== Copyright
+Here are some examples to demonstrate usage. The domain is renting textbooks - as we do at Bookrenter.com.
 
-Copyright (c) 2011 Michael Pearce. See LICENSE.txt for
-further details.
+== Declaration
+
+Shared functionality is declared using methods that start with (({shared_})): (({shared_setup_for})), (({shared_should_be})), (({shared_context_for})). These blocks are not immediately executed, but instead must be invoked (examples of invocation later...)
+
+  shared_setup_for "an in-stock book" do
+    @book = Book.new(:quantity => 1, :price => 10_00, :rentable => false, :purchasable => false)
+  end
+
+  shared_should_be "available for rental" { assert @book.available_for_rental? }
+  
+  shared_context_for "a book available for checkout" do
+    should "be in stock" { assert @book.quantity > 0 }
+    should "have a non-negative price" { assert @book.price > 0 }
+  end
+  
+== Invocation
+
+Invocations of the shared functionality is done with the (({setup_for})) method for shared setups and  (({should_be})) for shared shoulds and shared contexts.  (See declarations above.)
+
+  context "Book" do
+    context "with a book available for rental" do
+      setup_for "an in-stock book"
+    
+      # occurs after setup_for "an in-stock book" invocation since placed after
+      setup do
+        @book.rentable = true
+      end
+      
+      should_be "available for rental"
+      
+      should_be "a book available for checkout"
+    end
+    
+    context "with a book available for purchase" do
+      setup_for "an in-stock book"
+  
+      setup do
+        @book.purchasable = true
+      end
+    
+      should_be "a book available for checkout"
+    end
+  end
+
+== Initialization
+
+The shared invocation also accepts an initialization block by chaining (({when})) or (({with})). This block can be used to create or modify instance variables used by the shared functionality.  It always executes before the shared functionality.
+
+  context "with a book available for purchase" do
+    setup_for "an in-stock book"
+
+    # when shared_should_be "a book available for checkout" is executed, @book will have purchasable equal to true
+    should_be "a book available for checkout".when("purchasable") { @book.purchasable = true }
+  end
+
+== Parameterization
+
+Shared functions can also be parameterized using block parameters. This can be done for shared setups, shoulds, and setups and shoulds contained within a shared context. The value passed to the declared shared function is the return value of the initialization block. The below example parameterizes a shared setup.
+
+  shared_setup_for "an in-stock book" do |rentable|
+    @book = Book.new(:quantity => 1, :price => 10_00, :rentable => rentable, :purchasable => false)
+  end
+
+  context "with a book available for rental" do
+    # the return value of the block is "true" which will be passed as the block parameter "rentable"
+    setup_for("an in-stock book").with("a rentable book") { true }
+    
+    should_be "available for rental"
+  end
+
+Here is a parameterized shared should.
+
+  context "with in-stock book" do
+    setup_for "an in-stock book"
+    
+    shared_should_be "unrentable for price" do |price|
+      @book.price = price
+      assert_false @book.available_for_rental?
+    end
+
+    should_be("unrentable for price").when("zero") { 0 }
+    should_be("unrentable for price").when("negative") { -1 }
+  end
+
+The shared functions also accept multiple parameters when the initialization block returns an array.
+
+  shared_setup_for "an in-stock book" do |rentable, purchasable|
+    @book = Book.new(:quantity => 1, :price => 10_00, :rentable => rentable, :purchasable => purchasable)
+  end
+
+  context "with a book available for rental and purchase" do
+    setup_for("an in-stock book").with("a rentable and purchasable book") { [true, true] }
+  
+    should_be "available for rental"
+    
+    should_be "available for purchase"
+  end
+
+== Library of Shared Functionality
+
+The shared functions can also be re-usable across multiple tests.
+
+In your test helper file:
+
+  class Test::Unit::TestCase
+    shared_setup_for "an in-stock book" do |rentable, purchasable|
+      @book = Book.new(:quantity => 1, :price => 10_00, :rentable => rentable, :purchasable => purchasable)
+    end
+  end
+
+In your test file:
+
+  class BookTest < Test::Unit::TestCase
+    context "with an in-stock book" do
+      shared_setup_for "an in-stock book".with { [true, true] }
+      
+      should "be in stock" { assert @book.quantity > 0 }
+    end
+  end
+
+
+= Credits
+
+Shared Shoulda is maintained by Michael Pearce (michael.pearce__at__bookrenter__com) and is funded by Bookrenter.com[http://www.bookrenter.com]. Many of the ideas that have inspired Shared Should come
+from practical usage by the Bookrenter software development team and conversations with Bookrenter developers Andrew Wheeler and Philippe Huibonhoa.
+
+
+= Copyright
+
+Copyright (c) 2011 Michael Pearce, Bookrenter.com. See LICENSE.txt for further details.
 

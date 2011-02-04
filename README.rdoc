@@ -103,9 +103,11 @@ Sharing whole contexts? No problem.
 
 == More Information on Syntax and Usage
 
-=== Finding Shared Functionality
+=== Finding Your Share
 
-Shared should invocations search up the context hierarchy to find a matching shared definition.  You can redefine your shares in ancestor contexts.
+When <tt>should_be</tt> or <tt>setup_for</tt> is invoked, it searches up the context hierarchy to find a matching shared definition.  You can redefine your shares in ancestor contexts or contexts or at the root (on your TestCase).
+
+NOTE: if you define a shared setup at the root level, you will need to call <tt>super</tt> if you have a setup instance method for your test.
 
 === Initialization Block
 

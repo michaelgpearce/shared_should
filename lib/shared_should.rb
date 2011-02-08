@@ -10,6 +10,7 @@ class Shoulda::Context
       end
       current_context = current_context.parent
     end
+    super
   end
 end
 

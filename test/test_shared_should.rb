@@ -10,6 +10,24 @@ class TestSharedShould < Test::Unit::TestCase
     assert @setup_instance_method_executed
   end
   
+  begin
+    invalid_method do
+    end
+    raise "Should have raised a NoMethodError"
+  rescue NoMethodError
+    # successfully raised NoMethodError
+  end
+  
+  context "NoMethodError check" do
+    begin
+      invalid_method do
+      end
+      raise "Should have raised a NoMethodError"
+    rescue NoMethodError
+      # successfully raised NoMethodError
+    end
+  end
+  
   context ".shared_context_for" do
     context "without params" do
       shared_context_for "a valid value" do

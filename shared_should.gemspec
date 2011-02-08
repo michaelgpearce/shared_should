@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{shared_should}
-  s.version = "0.5.2"
+  s.version = "0.5.3"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Michael Pearce"]
-  s.date = %q{2011-02-04}
+  s.date = %q{2011-02-08}
   s.description = %q{Share and reuse shoulds, contexts, and setup in Shoulda.}
   s.email = %q{michael.pearce@bookrenter.com}
   s.extra_rdoc_files = [

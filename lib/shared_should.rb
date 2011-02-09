@@ -1,7 +1,7 @@
 require 'shoulda'
 
 class Shoulda::Context
-  alias :method_mission_without_shared_method_check :method_missing
+  alias :method_missing_without_shared_method_check :method_missing
   def method_missing(method, *args, &blk)
     current_context = self
     while current_context && (current_context.kind_of?(Shoulda::Context) || current_context < Test::Unit::TestCase) do
@@ -10,7 +10,7 @@ class Shoulda::Context
       end
       current_context = current_context.parent
     end
-    method_mission_without_shared_method_check(method, *args, &blk)
+    method_missing_without_shared_method_check(method, *args, &blk)
   end
 end
 

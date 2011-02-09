@@ -1,6 +1,7 @@
 require 'helper'
 
 class TestSharedShould < Test::Unit::TestCase
+  # check that setup instance method is executed
   def setup
     super
     @setup_instance_method_executed = true
@@ -8,24 +9,6 @@ class TestSharedShould < Test::Unit::TestCase
   
   should "execute setup instance method" do
     assert @setup_instance_method_executed
-  end
-  
-  begin
-    invalid_method do
-    end
-    raise "Should have raised a NoMethodError"
-  rescue NoMethodError
-    # successfully raised NoMethodError
-  end
-  
-  context "NoMethodError check" do
-    begin
-      invalid_method do
-      end
-      raise "Should have raised a NoMethodError"
-    rescue NoMethodError
-      # successfully raised NoMethodError
-    end
   end
   
   context ".shared_context_for" do
@@ -379,12 +362,38 @@ class TestSharedShould < Test::Unit::TestCase
   should_be("a valid context test in class")
   
   
-  # ensure test methods are created
-  test_method_names = suite.tests.inject({}) do |test_method_names, test_case|
-    test_method_names[test_case.method_name] = true
-    test_method_names
+  # ensure should macros work
+  def self.should_be_a_valid_macro
+    should "be a valid macro" do
+      assert true
+    end
   end
-  [
+  
+  context "shoulda macro" do
+    should_be_a_valid_macro
+  end
+  
+  # ensure NoMethodError called when method not found
+  begin
+    invalid_method do
+    end
+    raise "Should have raised a NoMethodError"
+  rescue NoMethodError
+    # successfully raised NoMethodError
+  end
+  
+  context "NoMethodError check" do
+    begin
+      invalid_method do
+      end
+      raise "Should have raised a NoMethodError"
+    rescue NoMethodError
+      # successfully raised NoMethodError
+    end
+  end
+  
+  # ensure test methods are created
+  expected_method_names = [
     "test: .shared_context_for with params when true for a valid specified value should call setup in shared context. ",
     "test: .shared_context_for with params when true for a valid specified value should call setup in shared context. ",
     "test: .shared_context_for with params when true for a valid specified value should have specified value. ",
@@ -417,8 +426,21 @@ class TestSharedShould < Test::Unit::TestCase
     "test: parameterized block with an array should be be valid with shared should. ",
     "test:  should be a valid should test in class. ",
     "test: for a valid context test in class should have a true value. ",
-    "test: SharedShould should execute setup instance method. "
-  ].each do |method_name|
-    raise "Test method not found: '#{method_name}'" unless test_method_names.include?(method_name)
+    "test: SharedShould should execute setup instance method. ",
+    "test: shoulda macro should be a valid macro. "
+  ].inject({}) do |hash, expected_method_name|
+    hash[expected_method_name] = true
+    hash
+  end
+  actual_method_names = suite.tests.inject({}) do |hash, test_case|
+    hash[test_case.method_name] = true
+    hash
+  end
+  
+  expected_method_names.each do |method_name, value|
+    raise "Test method not found: '#{method_name}'" unless actual_method_names.include?(method_name)
+  end
+  actual_method_names.each do |method_name, value|
+    raise "Unexpected test method: '#{method_name}'" unless expected_method_names.include?(method_name)
   end
 end

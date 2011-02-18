@@ -4,10 +4,11 @@ class Shoulda::Context
   alias :method_missing_without_shared_method_check :method_missing
   def method_missing(method, *args, &blk)
     current_context = self
-    while current_context && (current_context.kind_of?(Shoulda::Context) || current_context < Test::Unit::TestCase) do
+    while current_context.kind_of?(Shoulda::Context) || current_context < Test::Unit::TestCase do
       if Test::Unit::TestCase.shared_context_block_owner(current_context).shared_context_blocks[method.to_s]
         return current_context.send(method, args[0], self, &blk)
       end
+      break unless current_context.kind_of?(Shoulda::Context)
       current_context = current_context.parent
     end
     method_missing_without_shared_method_check(method, *args, &blk)
@@ -48,10 +49,6 @@ class Test::Unit::TestCase
 
   def self.setup(&setup_block)
     @@setup_blocks << setup_block
-  end
-  
-  def self.parent
-    nil
   end
   
   def setup_shared_values(name, initialization_block)
@@ -290,6 +287,7 @@ module Shoulda::SharedContext
           return shared_setup_block
         end
         raise "Unable to find shared_setup_for('#{shared_name}')" if current_context.kind_of?(Class)
+        break unless current_context.kind_of?(Shoulda::Context)
         current_context = current_context.parent
       end
       raise "Unable to find shared_setup_for('#{shared_name}')"

@@ -16,25 +16,25 @@ Sharing shoulds is easy.
       setup { @book = Book.new(:quantity => 1, :price => 10_00 }
       
       ### Define a shared should
-      shared_should_be "available for checkout" { assert @book.available_for_checkout? }
+      share_should "be available for checkout" { assert @book.available_for_checkout? }
 
       context "with a rentable book" do
         setup { @book.rentable = true }
 
-        ### Use the "available for checkout" shared_should
-        should_be "available for checkout"
+        ### Use the "be available for checkout" share_should
+        use_should "be available for checkout"
       end
 
       context "with a purchasable book" do
         setup { @book.purchasable = true }
 
-        ### Use the "available for checkout" shared_should in this context too
-        should_be "available for checkout"
+        ### Use the "be available for checkout" share_should in this context too
+        use_should "be available for checkout"
       end
       
       ### ...or DRY it up by using .with or .when and an initialization block
-      should_be("available for checkout").when("rentable") { @book.rentable = true }
-      should_be("available for checkout").when("purchasable") { @book.purchasable = true }
+      use_should("be available for checkout").when("rentable") { @book.rentable = true }
+      use_should("be available for checkout").when("purchasable") { @book.purchasable = true }
     end
   end
 
@@ -44,11 +44,11 @@ Sharing setups is easy, too.
 
   context "Book" do
     ### Define a shared setup
-    shared_setup_for "an in-stock book" { @book = Book.new(:quantity => 1, :price => 10_00) }
+    share_setup "for an in-stock book" { @book = Book.new(:quantity => 1, :price => 10_00) }
     
     context "with an in-stock rentable book" do
       ### Use the shared setup here
-      setup_for "an in-stock book"
+      use_setup "for an in-stock book"
       
       ### Do some additional setup after the shared setup
       setup { @book.rentable = true }
@@ -58,7 +58,7 @@ Sharing setups is easy, too.
     
     context "with an in-stock purchasable book" do
       ### Use the shared setup again
-      setup_for "an in-stock book"
+      use_setup "for an in-stock book"
       
       setup { @book.purchasable = true }
       
@@ -75,7 +75,7 @@ Sharing whole contexts? Schmeasy!
       setup { @book = Book.new(:quantity => 1, :price => 10_00) }
     
       ### Define a shared context
-      shared_context_for "a book available for checkout" do
+      share_context "for a book available for checkout" do
         should "be in stock" { assert @book.quantity > 0 }
         should "have a non-negative price" { assert @book.price > 0 }
         should "be rentable or purchasable" { assert @book.rentable || @book.purchasable }
@@ -85,19 +85,19 @@ Sharing whole contexts? Schmeasy!
         setup { @book.rentable = true }
       
         ### Run the shoulds inside the shared context with a rentable book
-        should_be "a book available for checkout"
+        use_context "for a book available for checkout"
       end
     
       context "with a purchasable book" do
         setup { @book.purchasable = true }
       
         ### Run the shoulds inside the shared context again with a purchasable book
-        should_be "a book available for checkout"
+        use_context "for a book available for checkout"
       end
       
       ### ...or DRY it up by using .with or .when and an initialization block
-      should_be("a book available for checkout").when("rentable") { @book.rentable = true }
-      should_be("a book available for checkout").when("purchasable") { @book.purchasable = true }
+      use_context("for a book available for checkout").when("rentable") { @book.rentable = true }
+      use_context("for a book available for checkout").when("purchasable") { @book.purchasable = true }
     end
   end
 
@@ -106,7 +106,7 @@ Sharing whole contexts? Schmeasy!
 === Finding Your Share
 
 Some rules:
-* When <tt>should_be</tt> or <tt>setup_for</tt> is invoked, it searches up the context hierarchy to find a matching shared definition.
+* When <tt>use_should</tt>, <tt>use_context</tt> or <tt>use_setup</tt> is invoked, it searches up the context hierarchy to find a matching shared definition.
 * You can redefine your shares by using the same name. These shares will only be available in in the current and descendant contexts.
 * Shares defined at the root (on your TestCase) are available in all contexts.
 * If you define a shared setup at the root level, you will need to call <tt>super</tt> if you have a setup instance method for your test.
@@ -118,15 +118,15 @@ The shared invocation accepts an initialization block by chaining <tt>when</tt> 
   context "Book" do
     setup { @book = Book.new(:quantity => 1, :price => 10_00) }
     
-    shared_should_be "available for checkout" { assert @book.available_for_checkout? }
+    share_should "be available for checkout" { assert @book.available_for_checkout? }
     
     context "with a rentable book" do
-      # when shared_should_be "available for checkout" is executed, @book will have rentable equal to true
-      should_be "available for checkout".when("rentable") { @book.rentable = true }
+      # when share_should "be available for checkout" is executed, @book will have rentable equal to true
+      use_should "be available for checkout".when("rentable") { @book.rentable = true }
     end
     
     context "with a purchasable book" do
-      should_be "available for checkout".when("purchasable") { @book.purchasable = true }
+      use_should "be available for checkout".when("purchasable") { @book.purchasable = true }
     end
   end
 
@@ -135,13 +135,13 @@ The shared invocation accepts an initialization block by chaining <tt>when</tt> 
 Shared functions can also be parameterized using block parameters. This can be done for shared setups, shoulds, and the setups and shoulds contained within a shared context. The value passed to the declared shared function is the return value of the initialization block. The below example parameterizes a shared setup.
 
   context "Book" do
-    shared_setup_for "an in-stock book" do |rentable|
+    share_setup "for an in-stock book" do |rentable|
       @book = Book.new(:quantity => 1, :price => 10_00, :rentable => rentable, :purchasable => false)
     end
 
     context "with rentable book" do
       # the return value of the block is "true" which will be passed as the block parameter "rentable"
-      setup_for("an in-stock book").with("a rentable book") { true }
+      use_setup("for an in-stock book").with("a rentable book") { true }
       
       should "be available for checkout" { assert @book.available_for_checkout? }
     end
@@ -153,13 +153,13 @@ Here is a parameterized shared should.
     context "with in-stock book" do
       setup { @book = Book.new(:quantity => 1) }
     
-      shared_should_be "unavailable for checkout for price" do |price|
+      share_should "be unavailable for checkout for price" do |price|
         @book.price = price
         assert_false @book.available_for_checkout?
       end
 
-      should_be("unavailable for checkout for price").when("zero") { 0 }
-      should_be("unavailable for checkout for price").when("negative") { -1 }
+      use_should("be unavailable for checkout for price").when("zero") { 0 }
+      use_should("be unavailable for checkout for price").when("negative") { -1 }
     end
   end
 
@@ -169,7 +169,7 @@ And a parameterized shared context.
     context "with in-stock book" do
       setup { @book = Book.new(:quantity => 1) }
 
-      shared_context_for "a book available for checkout at price" do
+      share_context "for a book available for checkout at price" do
         # parameters are on the setup and shoulds, not on the context
         setup { |price| @book.price = price }
         
@@ -179,7 +179,7 @@ And a parameterized shared context.
         should "be rentable or purchasable" { assert @book.rentable || @book.purchasable }
       end
 
-      should_be("a book available for checkout at price").when("positive") { 10_00 }
+      use_context("for a book available for checkout at price").when("positive") { 10_00 }
     end
   end
 
@@ -189,14 +189,14 @@ The shared functions also accept multiple parameters when the initialization blo
     context "with rentable book" do
       setup { @book = Book.new(:rentable => true) }
   
-      shared_should_be "unavailable for checkout for quantity and price" do |quantity, price|
+      share_should "be unavailable for checkout for quantity and price" do |quantity, price|
         @book.quantity = quantity
         @book.price = price
         assert_false @book.available_for_checkout?
       end
 
-      should_be("unavailable for checkout for quantity and price").when("zero quantity") { [0, 10_00] }
-      should_be("unavailable for checkout for quantity and price").when("zero price") { [1, 0] }
+      use_should("be unavailable for checkout for quantity and price").when("zero quantity") { [0, 10_00] }
+      use_should("be unavailable for checkout for quantity and price").when("zero price") { [1, 0] }
     end
   end
 
@@ -207,7 +207,7 @@ The shared functions can also be re-usable across multiple test cases.
 In your test helper file:
 
   class Test::Unit::TestCase
-    shared_setup_for "an in-stock book" do |rentable, purchasable|
+    share_setup "for an in-stock book" do |rentable, purchasable|
       @book = Book.new(:quantity => 1, :price => 10_00, :rentable => rentable, :purchasable => purchasable)
     end
   end
@@ -216,7 +216,7 @@ In your test file:
 
   class BookTest < Test::Unit::TestCase
     context "with an in-stock book" do
-      shared_setup_for "an in-stock book".with { [true, true] }
+      share_setup "for an in-stock book".with { [true, true] }
       
       should "be in stock" { assert @book.quantity > 0 }
     end

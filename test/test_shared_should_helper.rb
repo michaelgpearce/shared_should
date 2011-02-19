@@ -6,7 +6,7 @@ class SubclassTestCase < Test::Unit::TestCase
     assert @value
   end
   
-  shared_should_be "a true value for shared should helper" do
+  share_should "be a true value for shared should helper" do
     assert @value
   end
   
@@ -23,7 +23,7 @@ class Test::Unit::TestCase
     end
   end
   
-  shared_context_for "a true value for shared context helper" do
+  share_context "for a true value for shared context helper" do
     should "be true value" do
       assert @value
     end
@@ -33,7 +33,7 @@ class Test::Unit::TestCase
     @value = true
   end
   
-  shared_setup_for "a true value for shared setup helper" do
+  share_setup "for a true value for shared setup helper" do
     @value = true
   end
 end
@@ -47,7 +47,7 @@ class TestSharedShouldHelper < SubclassTestCase
       
       should_have_true_value_for_shared_should_helper
       
-      should_be("a true value for shared should helper")
+      use_should "be a true value for shared should helper"
     end
     
     context "with shared context helper" do
@@ -57,7 +57,7 @@ class TestSharedShouldHelper < SubclassTestCase
       
       should_be_valid_for_shared_context_helper
       
-      should_be("a true value for shared context helper")
+      use_context "for a true value for shared context helper"
     end
     
     context "with shared_setup helper" do
@@ -68,8 +68,8 @@ class TestSharedShouldHelper < SubclassTestCase
       end
     end
     
-    context "with shared_setup_for helper" do
-      setup_for("a true value for shared setup helper")
+    context "with share_setup helper" do
+      use_setup "for a true value for shared setup helper"
       
       should "be true value" do
         assert @value

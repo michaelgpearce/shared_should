@@ -99,25 +99,23 @@ module Shoulda::SharedContext
   end
   
   module SharedContextMethods
-    def shared_context_blocks
-       @shared_context_blocks ||= {}
-    end
-  
-    def shared_setup_blocks
-       @shared_setup_blocks ||= {}
-    end
-
     def shared_proxies
       @shared_proxies ||= []
     end
   
-    def should_be(shared_name)
+    def use_should(shared_name)
       shared_proxy = Shoulda::SharedProxy.new(shared_name)
       shared_proxies << shared_proxy
       return shared_proxy
     end
-  
-    def setup_for(shared_name)
+    
+    def use_context(shared_name)
+      shared_proxy = Shoulda::SharedProxy.new(shared_name)
+      shared_proxies << shared_proxy
+      return shared_proxy
+    end
+    
+    def use_setup(shared_name)
       shared_proxy = Shoulda::SharedProxy.new(shared_name)
       shared_setup_block = find_shared_setup_block(shared_name)
       setup do
@@ -163,13 +161,14 @@ module Shoulda::SharedContext
       end
     end
   
+    # deprecated
     def shared_context_should(shared_context_name, &shared_context_block)
-      shared_context_for(shared_context_name, &shared_context_block)
+      share_context(shared_context_name, &shared_context_block)
     end
 
-    def shared_context_for(shared_context_name, &shared_context_block)
+    def share_context(shared_context_name, &shared_context_block)
       wrapping_shared_context_block = Proc.new do
-        context "for #{shared_context_name}" do
+        context shared_context_name do
           merge_block(&shared_context_block)
         end
       end
@@ -177,13 +176,14 @@ module Shoulda::SharedContext
       do_shared_context(shared_context_name, shared_context_for_block(shared_context_block), &wrapping_shared_context_block)
     end
 
+    # deprecated
     def shared_should(shared_should_name, &shared_should_block)
-      shared_should_be(shared_should_name, &shared_should_block)
+      share_should(shared_should_name, &shared_should_block)
     end
 
-    def shared_should_be(shared_should_name, &shared_should_block)
+    def share_should(shared_should_name, &shared_should_block)
       shared_context_block = Proc.new do
-        should "be #{shared_should_name}" do
+        should shared_should_name do
           call_block_with_shared_value(shared_should_block)
         end
       end
@@ -191,6 +191,7 @@ module Shoulda::SharedContext
       do_shared_context(shared_should_name, shared_context_for_block(shared_should_block), &shared_context_block)
     end
 
+    # deprecated
     def shared_setup(shared_name, &setup_block)
       shared_setup_block = Proc.new do
         call_block_with_shared_value(setup_block)
@@ -199,13 +200,17 @@ module Shoulda::SharedContext
       do_shared_setup(shared_name, shared_context_for_block(setup_block), &shared_setup_block)
     end
 
-    def shared_setup_for(shared_name, &setup_block)
+    def share_setup(shared_name, &setup_block)
       current_context = eval('self', setup_block.binding)
       Test::Unit::TestCase.shared_context_block_owner(current_context).shared_setup_blocks[shared_name] = setup_block
     end
 
     def shared_context_blocks
        @shared_context_blocks ||= {}
+    end
+
+    def shared_should_blocks
+       @shared_should_blocks ||= {}
     end
 
     def shared_setup_blocks
@@ -286,11 +291,11 @@ module Shoulda::SharedContext
         if shared_setup_block = Test::Unit::TestCase.shared_context_block_owner(current_context).shared_setup_blocks[shared_name]
           return shared_setup_block
         end
-        raise "Unable to find shared_setup_for('#{shared_name}')" if current_context.kind_of?(Class)
+        raise "Unable to find share_setup('#{shared_name}')" if current_context.kind_of?(Class)
         break unless current_context.kind_of?(Shoulda::Context)
         current_context = current_context.parent
       end
-      raise "Unable to find shared_setup_for('#{shared_name}')"
+      raise "Unable to find share_setup('#{shared_name}')"
     end
   end
 end

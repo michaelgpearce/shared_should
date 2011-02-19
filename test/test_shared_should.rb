@@ -11,9 +11,9 @@ class TestSharedShould < Test::Unit::TestCase
     assert @setup_instance_method_executed
   end
   
-  context ".shared_context_for" do
+  context ".share_context" do
     context "without params" do
-      shared_context_for "a valid value" do
+      share_context "for a valid value" do
         setup do
           @context_value = true
         end
@@ -32,11 +32,11 @@ class TestSharedShould < Test::Unit::TestCase
           @value = true
         end
   
-        should_be("a valid value")
+        use_context "for a valid value"
       end
     
       context "with value in initializer" do
-        should_be("a valid value").when("a true value") { @value = true }
+        use_context("for a valid value").when("a true value") { @value = true }
       end
     end
     
@@ -45,7 +45,7 @@ class TestSharedShould < Test::Unit::TestCase
         @value = true
       end
       
-      shared_context_for "a valid specified value" do
+      share_context "for a valid specified value" do
         setup do |value|
           @expected_value = value
           @context_value = true
@@ -64,10 +64,10 @@ class TestSharedShould < Test::Unit::TestCase
         end
       end
       
-      should_be("a valid specified value").when("true") { true }
+      use_context("for a valid specified value").when("true") { true }
     end
   end
-    
+  
   context ".shared_context_should" do
     context "without params" do
       setup do
@@ -119,9 +119,9 @@ class TestSharedShould < Test::Unit::TestCase
     end
   end
   
-  context ".shared_should_be" do
+  context ".share_should" do
     context "without params" do
-      shared_should_be "a true value" do
+      share_should "be a true value" do
         assert @value
       end
       
@@ -130,15 +130,15 @@ class TestSharedShould < Test::Unit::TestCase
           @value = true
         end
         
-        should_be("a true value")
+        use_should "be a true value"
       end
       
       context "when value in initializer" do
-        should_be("a true value").when("value is true") { @value = true }
+        use_should("be a true value").when("value is true") { @value = true }
       end
       
       context "with value in initializer" do
-        should_be("a true value").with("true value") { @value = true }
+        use_should("be a true value").with("true value") { @value = true }
       end
     end
     
@@ -147,11 +147,11 @@ class TestSharedShould < Test::Unit::TestCase
         @value = true
       end
       
-      shared_should_be "a valid specified value" do |value|
+      share_should "be a valid specified value" do |value|
         assert_equal value, @value
       end
       
-      should_be("a valid specified value").when("true") { true }
+      use_should("be a valid specified value").when("true") { true }
     end
   end
   
@@ -219,7 +219,7 @@ class TestSharedShould < Test::Unit::TestCase
     end
   end
   
-  context ".shared_setup_for" do
+  context ".share_setup" do
     context "without params" do
       context "without initialization block" do
         setup do
@@ -227,11 +227,11 @@ class TestSharedShould < Test::Unit::TestCase
           @value = false
         end
   
-        shared_setup_for "true value" do
+        share_setup "for true value" do
           @value = true
         end
   
-        setup_for("true value")
+        use_setup("for true value")
   
         should "have a true value from shared setup" do
           assert @value
@@ -244,11 +244,11 @@ class TestSharedShould < Test::Unit::TestCase
           @value = false
         end
   
-        shared_setup_for "value" do
+        share_setup "for value" do
           @value = @initialization_value
         end
   
-        setup_for("value").when("initialization value is true") { @initialization_value = true }
+        use_setup("for value").with("true initialization value") { @initialization_value = true }
   
         should "have a true value from shared setup" do
           assert @value
@@ -257,7 +257,7 @@ class TestSharedShould < Test::Unit::TestCase
     end
     
     context "with parameterized initialization block" do
-      shared_setup_for "value" do |value|
+      share_setup "for value" do |value|
         @value = value
       end
       
@@ -267,7 +267,7 @@ class TestSharedShould < Test::Unit::TestCase
           @value = false
         end
       
-        setup_for("value").when("initialization value is true") { true }
+        use_setup("for value").with("true initialization value") { true }
       
         should "have a true value from shared setup" do
           assert @value
@@ -319,47 +319,47 @@ class TestSharedShould < Test::Unit::TestCase
   end
   
   context "context directly under test class" do
-    shared_setup_for("a true value") do
+    share_setup "for a true value" do
       @value = true
     end
     
-    shared_should_be("a valid should test") do
+    share_should "be a valid should test" do
       assert @value
     end
     
-    shared_context_for("a valid context test") do
+    share_context "for a valid context test" do
       should "have a true value" do
         assert @value
       end
     end
-
-    setup_for("a true value")
+  
+    use_setup "for a true value"
     
-    should_be("a valid should test")
+    use_should "be a valid should test"
     
-    should_be("a valid context test")
+    use_context "for a valid context test"
   end
   
   # test class as context
-  shared_setup_for("a true value in class") do
+  share_setup "for a true value in class" do
     @class_value = true
   end
   
-  shared_should_be("a valid should test in class") do
+  share_should "be a valid should test in class" do
     assert @class_value
   end
   
-  shared_context_for("a valid context test in class") do
+  share_context "for a valid context test in class" do
     should "have a true value" do
       assert @class_value
     end
   end
-
-  setup_for("a true value in class")
   
-  should_be("a valid should test in class")
+  use_setup "for a true value in class"
   
-  should_be("a valid context test in class")
+  use_should "be a valid should test in class"
+  
+  use_context "for a valid context test in class"
   
   
   # ensure should macros work
@@ -394,36 +394,36 @@ class TestSharedShould < Test::Unit::TestCase
   
   # ensure test methods are created
   expected_method_names = [
-    "test: .shared_context_for with params when true for a valid specified value should call setup in shared context. ",
-    "test: .shared_context_for with params when true for a valid specified value should call setup in shared context. ",
-    "test: .shared_context_for with params when true for a valid specified value should have specified value. ",
-    "test: .shared_context_for with params when true for a valid specified value should setup @expected_value. ",
-    "test: .shared_context_for without params with value in initializer when a true value for a valid value should call setup in shared context. ",
-    "test: .shared_context_for without params with value in initializer when a true value for a valid value should have true value. ",
-    "test: .shared_context_for without params with value in setup for a valid value should call setup in shared context. ",
-    "test: .shared_context_for without params with value in setup for a valid value should have true value. ",
-    "test: .shared_context_should with params for be valid for specified value should call setup in shared context. ",
-    "test: .shared_context_should with params for be valid for specified value should have specified value. ",
-    "test: .shared_context_should with params for be valid for specified value should setup @expected_value. ",
-    "test: .shared_context_should without params for be valid should call setup in shared context. ",
-    "test: .shared_context_should without params for be valid should have true value. ",
+    "test: .share_context with params when true for a valid specified value should call setup in shared context. ",
+    "test: .share_context with params when true for a valid specified value should call setup in shared context. ",
+    "test: .share_context with params when true for a valid specified value should have specified value. ",
+    "test: .share_context with params when true for a valid specified value should setup @expected_value. ",
+    "test: .share_context without params with value in initializer when a true value for a valid value should call setup in shared context. ",
+    "test: .share_context without params with value in initializer when a true value for a valid value should have true value. ",
+    "test: .share_context without params with value in setup for a valid value should call setup in shared context. ",
+    "test: .share_context without params with value in setup for a valid value should have true value. ",
+    "test: .shared_context_should with params be valid for specified value should call setup in shared context. ",
+    "test: .shared_context_should with params be valid for specified value should have specified value. ",
+    "test: .shared_context_should with params be valid for specified value should setup @expected_value. ",
+    "test: .shared_context_should without params be valid should call setup in shared context. ",
+    "test: .shared_context_should without params be valid should have true value. ",
     "test: .shared_setup with params with shared setup value should have a true value from shared setup. ",
     "test: .shared_setup without params with shared setup value should have a true value from shared setup. ",
-    "test: .shared_setup_for with parameterized initialization block with shared setup value should have a true value from shared setup. ",
-    "test: .shared_setup_for without params with initialization block should have a true value from shared setup. ",
-    "test: .shared_setup_for without params without initialization block should have a true value from shared setup. ",
-    "test: .shared_should with params should be have specified value. ",
-    "test: .shared_should without params should be have true value. ",
-    "test: .shared_should_be with params when true should be a valid specified value. ",
-    "test: .shared_should_be without params when value in initializer when value is true should be a true value. ",
-    "test: .shared_should_be without params with value in initializer with true value should be a true value. ",
-    "test: .shared_should_be without params with value in setup should be a true value. ",
+    "test: .share_setup with parameterized initialization block with shared setup value should have a true value from shared setup. ",
+    "test: .share_setup without params with initialization block should have a true value from shared setup. ",
+    "test: .share_setup without params without initialization block should have a true value from shared setup. ",
+    "test: .shared_should with params should have specified value. ",
+    "test: .shared_should without params should have true value. ",
+    "test: .share_should with params when true should be a valid specified value. ",
+    "test: .share_should without params when value in initializer when value is true should be a true value. ",
+    "test: .share_should without params with value in initializer with true value should be a true value. ",
+    "test: .share_should without params with value in setup should be a true value. ",
     "test: context directly under test class for a valid context test should have a true value. ",
     "test: context directly under test class should be a valid should test. ",
-    "test: parameterized block with an array for be valid with shared context should do something with shared_value. ",
-    "test: parameterized block with an array for be valid with shared context should do something with value block param. ",
-    "test: parameterized block with an array for be valid with shared context should do something with value block params. ",
-    "test: parameterized block with an array should be be valid with shared should. ",
+    "test: parameterized block with an array be valid with shared context should do something with shared_value. ",
+    "test: parameterized block with an array be valid with shared context should do something with value block param. ",
+    "test: parameterized block with an array be valid with shared context should do something with value block params. ",
+    "test: parameterized block with an array should be valid with shared should. ",
     "test:  should be a valid should test in class. ",
     "test: for a valid context test in class should have a true value. ",
     "test: SharedShould should execute setup instance method. ",

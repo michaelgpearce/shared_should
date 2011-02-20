@@ -216,7 +216,7 @@ In your test file:
 
   class BookTest < Test::Unit::TestCase
     context "with an in-stock book" do
-      share_setup "for an in-stock book".with { [true, true] }
+      use_setup("for an in-stock book").with { [true, true] }
       
       should "be in stock" { assert @book.quantity > 0 }
     end

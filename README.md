@@ -114,7 +114,7 @@ Some rules:
 
 ### Initialization Block
 
-The shared invocation accepts an initialization block by chaining <tt>when</tt>. This block can be used to create or modify instance variables used by the shared functionality. It always executes before the shared functionality.
+The shared invocation accepts an initialization block by chaining <tt>when</tt> followed by a block. This block can be used to create or modify instance variables used by the shared functionality. It always executes before the shared functionality.
 
     context "Book" do
         setup { @book = Book.new(:quantity => 1, :price => 10_00) }
@@ -123,17 +123,17 @@ The shared invocation accepts an initialization block by chaining <tt>when</tt>.
         
         context "with a rentable book" do
             # when share_should "be available for checkout" is executed, @book will have rentable equal to true
-            use_should "be available for checkout".when("rentable") { @book.rentable = true }
+            use_should("be available for checkout").when("rentable") { @book.rentable = true }
         end
         
         context "with a purchasable book" do
-            use_should "be available for checkout".when("purchasable") { @book.purchasable = true }
+            use_should("be available for checkout").when("purchasable") { @book.purchasable = true }
         end
     end
 
 ### Parameterizing Shares
 
-Shared functions can also be parameterized using block parameters. This can be done for shared setups, shoulds, and the setups and shoulds contained within a shared context. The value passed to the declared shared function is the return value of the <tt>with</tt> parameterization block. The below example parameterizes a shared setup.
+Shared functions can also be parameterized using block parameters. This can be done for shared setups, shoulds, and the setups and shoulds contained within a shared context. The value passed to the shared function is the return value of the <tt>with</tt> parameterization block. The below example parameterizes a shared setup.
 
     context "Book" do
         share_setup "for an in-stock book" do |rentable|
@@ -184,7 +184,7 @@ And a parameterized shared context.
         end
     end
 
-The shared functions also accept multiple parameters when the initialization block returns an array.
+The shared functions also accept multiple parameters when the parameterization block returns an array.
 
     context "Book" do
         context "with rentable book" do

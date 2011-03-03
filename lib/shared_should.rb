@@ -120,7 +120,7 @@ module Shoulda::SharedContext
       shared_setup_block = find_shared_setup_block(shared_name)
       setup do
         if initialization_block = shared_proxy.initialization_block
-          setup_shared_values(shared_proxy.when_description, shared_proxy.initialization_block)
+          setup_shared_values(shared_proxy.description, shared_proxy.initialization_block)
         end
         call_block_with_shared_value(shared_setup_block)
       end
@@ -310,29 +310,41 @@ end
 
 
 class Shoulda::SharedProxy
-  attr_accessor :shared_name, :when_description, :initialization_block
+  attr_accessor :shared_name, :description, :initialization_blocks
   
   def initialize(shared_name)
     self.shared_name = shared_name
+    self.initialization_blocks = []
   end
   
-  def when(when_description = nil, &initialization_block)
-    when_helper("when", when_description, &initialization_block)
+  def when(description = nil, &initialization_block)
+    when_helper("when", description, &initialization_block)
+    return self
   end
   
-  def with(with_description = nil, &initialization_block)
-    when_helper("with", with_description, &initialization_block)
+  def with(description = nil, &initialization_block)
+    when_helper("with", description, &initialization_block)
+    return nil
   end
   
   def execute(context)
     method_name = context.send(:shared_method_name, :should, shared_name)
-    context.send(method_name, when_description, &initialization_block)
+    context.send(method_name, description, &initialization_block)
+  end
+  
+  def initialization_block
+    blocks = initialization_blocks
+    return Proc.new do
+      blocks.collect {|block| block.bind(self).call}.last
+    end
   end
   
   private
   
-  def when_helper(when_name, when_description = nil, &initialization_block)
-    self.when_description = when_description ? "#{when_name} #{when_description}" : nil
-    self.initialization_block = initialization_block
+  def when_helper(conditional, description = nil, &initialization_block)
+    if description
+      self.description = "#{self.description}#{self.description.nil? ? nil : ' and '}#{conditional} #{description}"
+    end
+    self.initialization_blocks << initialization_block
   end
 end

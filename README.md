@@ -32,7 +32,7 @@ Sharing shoulds is easy.
                 use_should "be available for checkout"
             end
             
-            ### ...or DRY it up by using .with or .when and an initialization block
+            ### ...or DRY it up by using .when and an initialization block
             use_should("be available for checkout").when("rentable") { @book.rentable = true }
             use_should("be available for checkout").when("purchasable") { @book.purchasable = true }
         end
@@ -95,7 +95,7 @@ Sharing whole contexts? Schmeasy!
                 use_context "for a book available for checkout"
             end
             
-            ### ...or DRY it up by using .with or .when and an initialization block
+            ### ...or DRY it up by using .when and an initialization block
             use_context("for a book available for checkout").when("rentable") { @book.rentable = true }
             use_context("for a book available for checkout").when("purchasable") { @book.purchasable = true }
         end
@@ -114,7 +114,7 @@ Some rules:
 
 ### Initialization Block
 
-The shared invocation accepts an initialization block by chaining <tt>when</tt> or <tt>with</tt>. This block can be used to create or modify instance variables used by the shared functionality. It always executes before the shared functionality.
+The shared invocation accepts an initialization block by chaining <tt>when</tt>. This block can be used to create or modify instance variables used by the shared functionality. It always executes before the shared functionality.
 
     context "Book" do
         setup { @book = Book.new(:quantity => 1, :price => 10_00) }
@@ -133,7 +133,7 @@ The shared invocation accepts an initialization block by chaining <tt>when</tt> 
 
 ### Parameterizing Shares
 
-Shared functions can also be parameterized using block parameters. This can be done for shared setups, shoulds, and the setups and shoulds contained within a shared context. The value passed to the declared shared function is the return value of the initialization block. The below example parameterizes a shared setup.
+Shared functions can also be parameterized using block parameters. This can be done for shared setups, shoulds, and the setups and shoulds contained within a shared context. The value passed to the declared shared function is the return value of the <tt>with</tt> parameterization block. The below example parameterizes a shared setup.
 
     context "Book" do
         share_setup "for an in-stock book" do |rentable|
@@ -142,7 +142,7 @@ Shared functions can also be parameterized using block parameters. This can be d
 
         context "with rentable book" do
             # the return value of the block is "true" which will be passed as the block parameter "rentable"
-            use_setup("for an in-stock book").with("a rentable book") { true }
+            use_setup("for an in-stock book").with { true }
             
             should "be available for checkout" { assert @book.available_for_checkout? }
         end
@@ -159,8 +159,8 @@ Here is a parameterized shared should.
                 assert_false @book.available_for_checkout?
             end
 
-            use_should("be unavailable for checkout for price").when("zero") { 0 }
-            use_should("be unavailable for checkout for price").when("negative") { -1 }
+            use_should("be unavailable for checkout for price").with("zero") { 0 }
+            use_should("be unavailable for checkout for price").with("a negative price") { -1 }
         end
     end
 
@@ -180,7 +180,7 @@ And a parameterized shared context.
                 should "be rentable or purchasable" { assert @book.rentable || @book.purchasable }
             end
 
-            use_context("for a book available for checkout at price").when("positive") { 10_00 }
+            use_context("for a book available for checkout at price").with("a positive price") { 10_00 }
         end
     end
 
@@ -196,8 +196,8 @@ The shared functions also accept multiple parameters when the initialization blo
                 assert_false @book.available_for_checkout?
             end
 
-            use_should("be unavailable for checkout for quantity and price").when("zero quantity") { [0, 10_00] }
-            use_should("be unavailable for checkout for quantity and price").when("zero price") { [1, 0] }
+            use_should("be unavailable for checkout for quantity and price").with("a zero quantity") { [0, 10_00] }
+            use_should("be unavailable for checkout for quantity and price").with("a zero price") { [1, 0] }
         end
     end
 
@@ -227,7 +227,7 @@ In your test file:
 # Credits
 
 Shared Shoulda is maintained by [Michael Pearce](http://github.com/michaelgpearce) and is funded by [BookRenter.com](http://www.bookrenter.com "BookRenter.com"). Many of the ideas that have inspired Shared Should come
-from practical usage by the Bookrenter software development team and conversations with Bookrenter developers [Andrew Wheeler](http://github.com/jawheeler) and [Philippe Huibonhoa](http://github.com/phuibonhoa).
+from practical usage by the Bookrenter software development team and conversations with Bookrenter developers [Andrew Wheeler](http://github.com/jawheeler), [Ben Somers](http://github.com/bensomers), and [Philippe Huibonhoa](http://github.com/phuibonhoa).
 
 ![BookRenter.com Logo](http://assets0.bookrenter.com/images/header/bookrenter_logo.gif "BookRenter.com")
 

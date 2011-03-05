@@ -335,7 +335,7 @@ class Shoulda::SharedProxy
   def initialization_block
     blocks = initialization_blocks
     return Proc.new do
-      blocks.collect {|block| block.bind(self).call}.last
+      blocks.collect {|block| block.bind(self).call if block}.last
     end
   end
   

@@ -431,58 +431,68 @@ class TestSharedShould < Test::Unit::TestCase
     end
   end
   
-  # ensure test methods are created
-  expected_method_names = [
-      'test:  should be a valid should test in class. ',
-      'test: .share_context with params with chaining when using initialization chain and with true for a chained value should chain initialization block and be with params. ',
-      'test: .share_context with params with true for a valid specified value should call setup in shared context. ',
-      'test: .share_context with params with true for a valid specified value should have specified value. ',
-      'test: .share_context with params with true for a valid specified value should setup @expected_value. ',
-      'test: .share_context without params with value in initializer when a true value for a valid value should call setup in shared context. ',
-      'test: .share_context without params with value in initializer when a true value for a valid value should have true value. ',
-      'test: .share_context without params with value in setup for a valid value should call setup in shared context. ',
-      'test: .share_context without params with value in setup for a valid value should have true value. ',
-      'test: .share_setup with param block with chaining should have used share with chain and params. ',
-      'test: .share_setup with param block with shared setup value should have a true value from shared setup. ',
-      'test: .share_setup without params with initialization block should have a true value from shared setup. ',
-      'test: .share_setup without params without initialization block should have a true value from shared setup. ',
-      'test: .share_should with params with chaining when using initialization chain and with true should be a valid specified value. ',
-      'test: .share_should with params with chaining when using initialization chain xxxx and with true should be a valid specified value. ',
-      'test: .share_should with params with true should be a valid specified value. ',
-      'test: .share_should without params when value in initializer when value is true should be a true value. ',
-      'test: .share_should without params with value in initializer when value is true should be a true value. ',
-      'test: .share_should without params with value in setup should be a true value. ',
-      'test: .shared_context_should with params be valid for specified value should call setup in shared context. ',
-      'test: .shared_context_should with params be valid for specified value should have specified value. ',
-      'test: .shared_context_should with params be valid for specified value should setup @expected_value. ',
-      'test: .shared_context_should without params be valid should call setup in shared context. ',
-      'test: .shared_context_should without params be valid should have true value. ',
-      'test: .shared_setup with params with shared setup value should have a true value from shared setup. ',
-      'test: .shared_setup without params with shared setup value should have a true value from shared setup. ',
-      'test: .shared_should with params should have specified value. ',
-      'test: .shared_should without params should have true value. ',
-      'test: SharedShould should execute setup instance method. ',
-      'test: context directly under test class for a valid context test should have a true value. ',
-      'test: context directly under test class should be a valid should test. ',
-      'test: for a valid context test in class should have a true value. ',
-      'test: parameterized block with an array be valid with shared context should do something with shared_value. ',
-      'test: parameterized block with an array be valid with shared context should do something with value block param. ',
-      'test: parameterized block with an array be valid with shared context should do something with value block params. ',
-      'test: parameterized block with an array should be valid with shared should. ',
-      'test: shoulda macro should be a valid macro. '
-    ].inject({}) do |hash, expected_method_name|
-    hash[expected_method_name] = true
-    hash
-  end
-  actual_method_names = suite.tests.inject({}) do |hash, test_case|
-    hash[test_case.method_name] = true
-    hash
-  end
+  context "expected methods" do
+    should "have expected methods in test" do
+      # ensure test methods are created
+      expected_method_names = [
+          'test:  should be a valid should test in class. ',
+          'test: .share_context with params with chaining when using initialization chain and with true for a chained value should chain initialization block and be with params. ',
+          'test: .share_context with params with true for a valid specified value should call setup in shared context. ',
+          'test: .share_context with params with true for a valid specified value should have specified value. ',
+          'test: .share_context with params with true for a valid specified value should setup @expected_value. ',
+          'test: .share_context without params with value in initializer when a true value for a valid value should call setup in shared context. ',
+          'test: .share_context without params with value in initializer when a true value for a valid value should have true value. ',
+          'test: .share_context without params with value in setup for a valid value should call setup in shared context. ',
+          'test: .share_context without params with value in setup for a valid value should have true value. ',
+          'test: .share_setup with param block with chaining should have used share with chain and params. ',
+          'test: .share_setup with param block with shared setup value should have a true value from shared setup. ',
+          'test: .share_setup without params with initialization block should have a true value from shared setup. ',
+          'test: .share_setup without params without initialization block should have a true value from shared setup. ',
+          'test: .share_should with params with chaining when using initialization chain and with true should be a valid specified value. ',
+          'test: .share_should with params with chaining when using initialization chain xxxx and with true should be a valid specified value. ',
+          'test: .share_should with params with true should be a valid specified value. ',
+          'test: .share_should without params when value in initializer when value is true should be a true value. ',
+          'test: .share_should without params with value in initializer when value is true should be a true value. ',
+          'test: .share_should without params with value in setup should be a true value. ',
+          'test: .shared_context_should with params be valid for specified value should call setup in shared context. ',
+          'test: .shared_context_should with params be valid for specified value should have specified value. ',
+          'test: .shared_context_should with params be valid for specified value should setup @expected_value. ',
+          'test: .shared_context_should without params be valid should call setup in shared context. ',
+          'test: .shared_context_should without params be valid should have true value. ',
+          'test: .shared_setup with params with shared setup value should have a true value from shared setup. ',
+          'test: .shared_setup without params with shared setup value should have a true value from shared setup. ',
+          'test: .shared_should with params should have specified value. ',
+          'test: .shared_should without params should have true value. ',
+          'test: SharedShould should execute setup instance method. ',
+          'test: context directly under test class for a valid context test should have a true value. ',
+          'test: context directly under test class should be a valid should test. ',
+          'test: for a valid context test in class should have a true value. ',
+          'test: parameterized block with an array be valid with shared context should do something with shared_value. ',
+          'test: parameterized block with an array be valid with shared context should do something with value block param. ',
+          'test: parameterized block with an array be valid with shared context should do something with value block params. ',
+          'test: parameterized block with an array should be valid with shared should. ',
+          'test: shoulda macro should be a valid macro. ',
+          'test: expected methods should have expected methods in test. '
+        ].inject({}) do |hash, expected_method_name|
+        hash[expected_method_name] = true
+        hash
+      end
+      actual_method_names = self.class.suite.tests.inject({}) do |hash, test_case|
+        hash[test_case.method_name] = true
+        hash
+      end
   
-  expected_method_names.each do |method_name, value|
-    raise "Test method not found: '#{method_name}'" unless actual_method_names.include?(method_name)
-  end
-  actual_method_names.each do |method_name, value|
-    raise "Unexpected test method: '#{method_name}'" unless expected_method_names.include?(method_name)
+      expected_methods_not_found = []
+      expected_method_names.each do |method_name, value|
+         expected_methods_not_found << method_name unless actual_method_names.include?(method_name)
+      end
+      assert_equal [], expected_methods_not_found
+      
+      actual_methods_not_found = []
+      actual_method_names.each do |method_name, value|
+        actual_methods_not_found << method_name unless expected_method_names.include?(method_name)
+      end
+      assert_equal [], actual_methods_not_found
+    end
   end
 end

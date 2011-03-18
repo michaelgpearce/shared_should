@@ -1,6 +1,6 @@
 require 'helper'
 
-# re-open ActiveSupport::TestCase class for some shares
+# Create a subclass for some shares
 class SubclassTestCase < Test::Unit::TestCase
   shared_should "have true value for shared should helper" do
     assert @value

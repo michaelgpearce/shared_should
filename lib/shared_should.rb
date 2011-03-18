@@ -18,8 +18,8 @@ end
 class Test::Unit::TestCase
   attr_accessor :shared_value
   attr_accessor :shared_name
-  @@shared_proxies_executed = false
-  @@setup_blocks = []
+  @@shared_proxies_executed = {}
+  @@setup_blocks = {}
 
   class << self
     # these methods need to be aliased for both the test class and the should context
@@ -27,11 +27,12 @@ class Test::Unit::TestCase
   end
   
   def self.suite
-    unless @@shared_proxies_executed
+    # assuming 'suite' is called before executing any tests - may be a poor assumption. Find something better?
+    unless @@shared_proxies_executed[self]
       shared_proxies.each do |shared_proxy|
         shared_proxy.execute(self)
       end
-      @@shared_proxies_executed = true
+      @@shared_proxies_executed[self] = true
     end
     
     suite_without_shared_should_execute
@@ -42,13 +43,14 @@ class Test::Unit::TestCase
   end
 
   def setup
-    @@setup_blocks.each do |setup_block|
+    (@@setup_blocks[self.class] || []).each do |setup_block|
       setup_block.bind(self).call
     end
   end
 
   def self.setup(&setup_block)
-    @@setup_blocks << setup_block
+    @@setup_blocks[self] = [] unless @@setup_blocks[self]
+    @@setup_blocks[self] << setup_block
   end
   
   def setup_shared_values(name, initialization_block)

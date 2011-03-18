@@ -114,7 +114,7 @@ Some rules:
 
 ### Initialization Block
 
-The shared invocation accepts an initialization block by chaining <tt>when</tt> followed by a block. This block can be used to create or modify instance variables used by the shared functionality. It always executes before the shared functionality.
+The shared invocation accepts an initialization block by chaining <tt>with</tt> (or its alias <tt>when</tt>) followed by a block. This block can be used to create or modify instance variables used by the shared functionality. It always executes before the shared functionality.
 
     context "Book" do
         setup { @book = Book.new(:quantity => 1, :price => 10_00) }
@@ -123,7 +123,7 @@ The shared invocation accepts an initialization block by chaining <tt>when</tt> 
         
         context "with a rentable book" do
             # when share_should "be available for checkout" is executed, @book will have rentable equal to true
-            use_should("be available for checkout").when("rentable") { @book.rentable = true }
+            use_should("be available for checkout").with("a rentable book") { @book.rentable = true }
         end
         
         context "with a purchasable book" do
@@ -133,7 +133,7 @@ The shared invocation accepts an initialization block by chaining <tt>when</tt> 
 
 ### Parameterizing Shares
 
-Shared functions can also be parameterized using block parameters. This can be done for shared setups, shoulds, and the setups and shoulds contained within a shared context. The value passed to the shared function is the return value of the <tt>with</tt> parameterization block. The below example parameterizes a shared setup.
+Shared functions can also be parameterized using block parameters. This can be done for shared setups, shoulds, and the setups and shoulds contained within a shared context. The value passed to the shared function is the return value of the <tt>given</tt> parameterization block. The below example parameterizes a shared setup.
 
     context "Book" do
         share_setup "for an in-stock book" do |rentable|
@@ -142,7 +142,7 @@ Shared functions can also be parameterized using block parameters. This can be d
 
         context "with rentable book" do
             # the return value of the block is "true" which will be passed as the block parameter "rentable"
-            use_setup("for an in-stock book").with { true }
+            use_setup("for an in-stock book").given { true }
             
             should "be available for checkout" { assert @book.available_for_checkout? }
         end
@@ -159,8 +159,8 @@ Here is a parameterized shared should.
                 assert_false @book.available_for_checkout?
             end
 
-            use_should("be unavailable for checkout for price").with("zero") { 0 }
-            use_should("be unavailable for checkout for price").with("a negative price") { -1 }
+            use_should("be unavailable for checkout for price").given("zero") { 0 }
+            use_should("be unavailable for checkout for price").given("a negative price") { -1 }
         end
     end
 
@@ -180,7 +180,7 @@ And a parameterized shared context.
                 should "be rentable or purchasable" { assert @book.rentable || @book.purchasable }
             end
 
-            use_context("for a book available for checkout at price").with("a positive price") { 10_00 }
+            use_context("for a book available for checkout at price").given("a positive price") { 10_00 }
         end
     end
 
@@ -196,8 +196,8 @@ The shared functions also accept multiple parameters when the parameterization b
                 assert_false @book.available_for_checkout?
             end
 
-            use_should("be unavailable for checkout for quantity and price").with("a zero quantity") { [0, 10_00] }
-            use_should("be unavailable for checkout for quantity and price").with("a zero price") { [1, 0] }
+            use_should("be unavailable for checkout for quantity and price").given("a zero quantity") { [0, 10_00] }
+            use_should("be unavailable for checkout for quantity and price").given("a zero price") { [1, 0] }
         end
     end
 
@@ -217,7 +217,7 @@ In your test file:
 
     class BookTest < Test::Unit::TestCase
         context "with an in-stock book" do
-            use_setup("for an in-stock book").with { [true, true] }
+            use_setup("for an in-stock book").given { [true, true] }
             
             should "be in stock" { assert @book.quantity > 0 }
         end

@@ -64,7 +64,7 @@ class TestSharedShould < Test::Unit::TestCase
         end
       end
       
-      use_context("for a valid specified value").with("true") { true }
+      use_context("for a valid specified value").given("true") { true }
       
       context "with chaining" do
         share_context "for a chained value" do
@@ -74,7 +74,8 @@ class TestSharedShould < Test::Unit::TestCase
           end
         end
         
-        use_context("for a chained value").when("using initialization chain") { @chain = true }.with("true") { true }
+        use_context("for a chained value").with("an initialization chain") { @chain = true }.given("true") { true }
+        use_context("for a chained value").when("using initialization chain") { @chain = true }.given("true") { true }
       end
     end
   end
@@ -162,7 +163,7 @@ class TestSharedShould < Test::Unit::TestCase
         assert_equal value, @value
       end
       
-      use_should("be a valid specified value").with("true") { true }
+      use_should("be a valid specified value").given("true") { true }
       
       context "with chaining" do
         share_should "be a valid specified value" do |value|
@@ -170,8 +171,8 @@ class TestSharedShould < Test::Unit::TestCase
           assert value
         end
         
-        use_should("be a valid specified value").when("using initialization chain") { @chain = true }.with("true") { true }
-        use_should("be a valid specified value").when("using initialization chain xxxx") { @chain = true }.with("true") { true }
+        use_should("be a valid specified value").when("using initialization chain") { @chain = true }.given("true") { true }
+        use_should("be a valid specified value").with("an initialization chain") { @chain = true }.given("true") { true }
       end
     end
   end
@@ -288,7 +289,7 @@ class TestSharedShould < Test::Unit::TestCase
           @value = false
         end
       
-        use_setup("for value").with("true") { true }
+        use_setup("for value").given("true") { true }
       
         should "have a true value from shared setup" do
           assert @value
@@ -305,7 +306,8 @@ class TestSharedShould < Test::Unit::TestCase
           @value = value
         end
         
-        use_setup("for value").when("using initialization chain") { @chain = true }.with("true") { true }
+        use_setup("for value").when("using initialization chain") { @chain = true }.given("true") { true }
+        use_setup("for value").with("an initialization chain") { @chain = true }.given("true") { true }
         
         should "have used share with chain and params" do
           assert @chain
@@ -436,10 +438,6 @@ class TestSharedShould < Test::Unit::TestCase
       # ensure test methods are created
       expected_method_names = [
           'test:  should be a valid should test in class. ',
-          'test: .share_context with params with chaining when using initialization chain and with true for a chained value should chain initialization block and be with params. ',
-          'test: .share_context with params with true for a valid specified value should call setup in shared context. ',
-          'test: .share_context with params with true for a valid specified value should have specified value. ',
-          'test: .share_context with params with true for a valid specified value should setup @expected_value. ',
           'test: .share_context without params with value in initializer when a true value for a valid value should call setup in shared context. ',
           'test: .share_context without params with value in initializer when a true value for a valid value should have true value. ',
           'test: .share_context without params with value in setup for a valid value should call setup in shared context. ',
@@ -448,9 +446,6 @@ class TestSharedShould < Test::Unit::TestCase
           'test: .share_setup with param block with shared setup value should have a true value from shared setup. ',
           'test: .share_setup without params with initialization block should have a true value from shared setup. ',
           'test: .share_setup without params without initialization block should have a true value from shared setup. ',
-          'test: .share_should with params with chaining when using initialization chain and with true should be a valid specified value. ',
-          'test: .share_should with params with chaining when using initialization chain xxxx and with true should be a valid specified value. ',
-          'test: .share_should with params with true should be a valid specified value. ',
           'test: .share_should without params when value in initializer when value is true should be a true value. ',
           'test: .share_should without params with value in initializer when value is true should be a true value. ',
           'test: .share_should without params with value in setup should be a true value. ',
@@ -472,7 +467,15 @@ class TestSharedShould < Test::Unit::TestCase
           'test: parameterized block with an array be valid with shared context should do something with value block params. ',
           'test: parameterized block with an array should be valid with shared should. ',
           'test: shoulda macro should be a valid macro. ',
-          'test: expected methods should have expected methods in test. '
+          'test: expected methods should have expected methods in test. ',
+          "test: .share_context with params given true for a valid specified value should call setup in shared context. ",
+          "test: .share_context with params with chaining with an initialization chain given true for a chained value should chain initialization block and be with params. ",
+          "test: .share_context with params given true for a valid specified value should setup @expected_value. ",
+          "test: .share_should with params with chaining with an initialization chain given true should be a valid specified value. ",
+          "test: .share_context with params given true for a valid specified value should have specified value. ",
+          "test: .share_context with params with chaining when using initialization chain given true for a chained value should chain initialization block and be with params. ",
+          "test: .share_should with params with chaining when using initialization chain given true should be a valid specified value. ",
+          "test: .share_should with params given true should be a valid specified value. "
         ].inject({}) do |hash, expected_method_name|
         hash[expected_method_name] = true
         hash
@@ -482,17 +485,18 @@ class TestSharedShould < Test::Unit::TestCase
         hash
       end
   
-      expected_methods_not_found = []
-      expected_method_names.each do |method_name, value|
-         expected_methods_not_found << method_name unless actual_method_names.include?(method_name)
-      end
-      assert_equal [], expected_methods_not_found
-      
       actual_methods_not_found = []
       actual_method_names.each do |method_name, value|
         actual_methods_not_found << method_name unless expected_method_names.include?(method_name)
       end
-      assert_equal [], actual_methods_not_found
+      assert_equal [], actual_methods_not_found, "Unknown methods exist in the test suite"
+      
+      expected_methods_not_found = []
+      expected_method_names.each do |method_name, value|
+         expected_methods_not_found << method_name unless actual_method_names.include?(method_name)
+      end
+      assert_equal [], expected_methods_not_found, "Unknown methods exist in the list of expected tests"
+      
     end
   end
 end

@@ -319,14 +319,16 @@ class Shoulda::SharedProxy
     self.initialization_blocks = []
   end
   
-  def when(description = nil, &initialization_block)
-    when_helper("when", description, &initialization_block)
-    return self
+  def with(description = nil, &initialization_block)
+    with_helper("with", description, &initialization_block)
   end
   
-  def with(description = nil, &initialization_block)
-    when_helper("with", description, &initialization_block)
-    return nil
+  def when(description = nil, &initialization_block)
+    with_helper("when", description, &initialization_block)
+  end
+  
+  def given(description = nil, &initialization_block)
+    with_helper("given", description, :disable_and => true, &initialization_block)
   end
   
   def execute(context)
@@ -343,10 +345,12 @@ class Shoulda::SharedProxy
   
   private
   
-  def when_helper(conditional, description = nil, &initialization_block)
+  def with_helper(conditional, description, options = {}, &initialization_block)
     if description
-      self.description = "#{self.description}#{self.description.nil? ? nil : ' and '}#{conditional} #{description}"
+      and_text = options[:disable_and] ? ' ' : ' and '
+      self.description = "#{self.description}#{self.description.nil? ? nil : and_text}#{conditional} #{description}"
     end
     self.initialization_blocks << initialization_block
+    return self
   end
 end

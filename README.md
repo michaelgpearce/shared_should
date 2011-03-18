@@ -110,7 +110,6 @@ Some rules:
 * When <tt>use\_should</tt>, <tt>use\_context</tt> or <tt>use\_setup</tt> is invoked, it searches up the context hierarchy to find a matching shared definition.
 * You can redefine your shares by using the same name. These shares will only be available in in the current and descendant contexts.
 * Shares defined at the root (on your TestCase) are available in all contexts.
-* If you define a shared setup at the root level, you will need to call <tt>super</tt> if you have a setup instance method for your test.
 
 ### Initialization Block
 

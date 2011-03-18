@@ -1,9 +1,8 @@
 require 'helper'
 
 class TestSharedShould < Test::Unit::TestCase
-  # check that setup instance method is executed
+  # check that setup instance method is executed when setup is overridden
   def setup
-    super
     @setup_instance_method_executed = true
   end
   

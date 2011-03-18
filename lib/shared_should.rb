@@ -42,7 +42,9 @@ class Test::Unit::TestCase
     return context_or_test_class.kind_of?(Shoulda::Context) ? context_or_test_class : Test::Unit::TestCase
   end
 
-  def setup
+  alias_method :initialize_without_shared_setup_execute, :initialize
+  def initialize(test_name)
+    initialize_without_shared_setup_execute(test_name)
     (@@setup_blocks[self.class] || []).each do |setup_block|
       setup_block.bind(self).call
     end

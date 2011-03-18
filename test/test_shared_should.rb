@@ -10,6 +10,29 @@ class TestSharedShould < Test::Unit::TestCase
     assert @setup_instance_method_executed
   end
   
+  # test class as context
+  share_setup "for a true value in class" do
+    assert @setup_instance_method_executed # setup instance method should have been called first
+    @class_value = true
+  end
+  
+  share_should "be a valid should test in class" do
+    assert @class_value
+  end
+  
+  share_context "for a valid context test in class" do
+    should "have a true value" do
+      assert @class_value
+    end
+  end
+  
+  use_setup "for a true value in class"
+  
+  use_should "be a valid should test in class"
+  
+  use_context "for a valid context test in class"
+  
+  
   context ".share_context" do
     context "without params" do
       share_context "for a valid value" do
@@ -380,28 +403,7 @@ class TestSharedShould < Test::Unit::TestCase
     use_context "for a valid context test"
   end
   
-  # test class as context
-  share_setup "for a true value in class" do
-    @class_value = true
-  end
-  
-  share_should "be a valid should test in class" do
-    assert @class_value
-  end
-  
-  share_context "for a valid context test in class" do
-    should "have a true value" do
-      assert @class_value
-    end
-  end
-  
-  use_setup "for a true value in class"
-  
-  use_should "be a valid should test in class"
-  
-  use_context "for a valid context test in class"
-  
-  
+
   # ensure should macros work
   def self.should_be_a_valid_macro
     should "be a valid macro" do

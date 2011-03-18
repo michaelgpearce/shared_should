@@ -42,11 +42,12 @@ class Test::Unit::TestCase
     return context_or_test_class.kind_of?(Shoulda::Context) ? context_or_test_class : Test::Unit::TestCase
   end
 
-  alias_method :initialize_without_shared_setup_execute, :initialize
-  def initialize(test_name)
-    initialize_without_shared_setup_execute(test_name)
-    (@@setup_blocks[self.class] || []).each do |setup_block|
-      setup_block.bind(self).call
+  def execute_class_shared_setups_if_not_executed
+    if !@shared_setups_executed
+      @shared_setups_executed = true
+      (@@setup_blocks[self.class] || []).each do |setup_block|
+        setup_block.bind(self).call
+      end
     end
   end
 
@@ -61,6 +62,7 @@ class Test::Unit::TestCase
   end
   
   def call_block_with_shared_value(test_block)
+    execute_class_shared_setups_if_not_executed
     if test_block.arity == 1
       # check arity of 1 before checking if value is an array. If one parameter, never treat the shared_value as variable args
       test_block.bind(self).call(self.shared_value)

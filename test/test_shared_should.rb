@@ -403,7 +403,69 @@ class TestSharedShould < Test::Unit::TestCase
     use_context "for a valid context test"
   end
   
-
+  context "chaining" do
+    context "with ordering verification" do
+      setup do
+        @count = 0
+      end
+  
+      share_setup "shared setup 1" do
+        assert_equal 1, @count
+        @count += 1
+      end
+  
+      share_setup "shared setup 2" do
+        assert_equal 3, @count
+        @count += 1
+      end
+  
+      share_should "be valid shared should" do
+        assert_equal 7, @count
+      end
+  
+      use_should("be valid shared should").
+        with_setup("shared setup 1").given("setup value") { assert_equal 0, @count; @count += 1 }.
+        with_setup("shared setup 2").given("setup value") { assert_equal 2, @count; @count += 1 }.
+        with("initialization value") { assert_equal 4, @count; @count += 1 }.
+        with("initialization value") { assert_equal 5, @count; @count += 1 }.
+        given { assert_equal 6, @count; @count += 1 }
+    end
+    
+    context "with parameters" do
+      share_setup "shared setup 1" do |value|
+        assert_equal :one, value
+      end
+    
+      share_setup "shared setup 2" do |value|
+        assert_equal :two, value
+      end
+      
+      share_should "be valid shared should with parameter" do |value|
+        assert_equal :three, @value
+        assert_equal :four, value
+      end
+    
+      use_should("be valid shared should with parameter").
+        with_setup("shared setup 1").given { :one }.
+        with_setup("shared setup 2").given { :two }.
+        with("initialization value") { @value = :three }.
+        given { :four }
+        
+      # TODO: this assertion enforces that only a trailing 'given' block is used for parameter argument
+      # For legacy reasons, return value from with/when currently can also be used for parameter arguement
+      #
+      # share_should "be valid shared should without parameter" do
+      #   assert_equal :three, @value
+      #   assert_nil shared_value
+      # end
+      # 
+      # use_should("be valid shared should without parameter").
+      #   with_setup("shared setup 1").given { :one }.
+      #   with_setup("shared setup 2").given { :two }.
+      #   with("initialization value") { @value = :three }
+    end
+  end
+  
   # ensure should macros work
   def self.should_be_a_valid_macro
     should "be a valid macro" do
@@ -476,7 +538,9 @@ class TestSharedShould < Test::Unit::TestCase
           "test: .share_context with params given true for a valid specified value should have specified value. ",
           "test: .share_context with params with chaining when using initialization chain given true for a chained value should chain initialization block and be with params. ",
           "test: .share_should with params with chaining when using initialization chain given true should be a valid specified value. ",
-          "test: .share_should with params given true should be a valid specified value. "
+          "test: .share_should with params given true should be a valid specified value. ",
+          "test: chaining with parameters with setup shared setup 1 with setup shared setup 2 and with initialization value should be valid shared should with parameter. ",
+          "test: chaining with ordering verification with setup shared setup 1 given setup value with setup shared setup 2 given setup value and with initialization value and with initialization value should be valid shared should. "
         ].inject({}) do |hash, expected_method_name|
         hash[expected_method_name] = true
         hash

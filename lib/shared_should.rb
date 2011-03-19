@@ -17,7 +17,6 @@ end
 
 class Test::Unit::TestCase
   attr_accessor :shared_value
-  attr_accessor :shared_name
   @@shared_proxies_executed = {}
   @@setup_blocks = {}
 
@@ -30,7 +29,7 @@ class Test::Unit::TestCase
     # assuming 'suite' is called before executing any tests - may be a poor assumption. Find something better?
     unless @@shared_proxies_executed[self]
       shared_proxies.each do |shared_proxy|
-        shared_proxy.execute(self)
+        shared_proxy.execute
       end
       @@shared_proxies_executed[self] = true
     end
@@ -56,9 +55,8 @@ class Test::Unit::TestCase
     @@setup_blocks[self] << setup_block
   end
   
-  def setup_shared_values(name, initialization_block)
+  def setup_shared_value(initialization_block)
     self.shared_value = initialization_block.nil? ? nil : initialization_block.bind(self).call
-    self.shared_name = name
   end
   
   def call_block_with_shared_value(test_block)
@@ -110,24 +108,22 @@ module Shoulda::SharedContext
     end
   
     def use_should(shared_name)
-      shared_proxy = Shoulda::SharedProxy.new(shared_name)
+      shared_proxy = Shoulda::SharedProxy.new(self, shared_name)
       shared_proxies << shared_proxy
       return shared_proxy
     end
     
     def use_context(shared_name)
-      shared_proxy = Shoulda::SharedProxy.new(shared_name)
+      shared_proxy = Shoulda::SharedProxy.new(self, shared_name)
       shared_proxies << shared_proxy
       return shared_proxy
     end
     
     def use_setup(shared_name)
-      shared_proxy = Shoulda::SharedProxy.new(shared_name)
+      shared_proxy = Shoulda::SharedProxy.new(self, shared_name)
       shared_setup_block = find_shared_setup_block(shared_name)
       setup do
-        if initialization_block = shared_proxy.initialization_block
-          setup_shared_values(shared_proxy.description, shared_proxy.initialization_block)
-        end
+        shared_proxy.execute_and_set_shared_value(self)
         call_block_with_shared_value(shared_setup_block)
       end
       return shared_proxy
@@ -139,7 +135,7 @@ module Shoulda::SharedContext
           block.bind(self).call
         
           shared_proxies.each do |shared_proxy|
-            shared_proxy.execute(self)
+            shared_proxy.execute
           end
         end
         shared_proxies_executing_block.bind(eval("self", block.binding))
@@ -238,7 +234,7 @@ module Shoulda::SharedContext
 
       caller_context.context name do
         setup do
-          setup_shared_values(name, initialization_block)
+          setup_shared_value(initialization_block)
         end
 
         merge_block(&shared_context_block)
@@ -260,13 +256,13 @@ module Shoulda::SharedContext
         caller_context.send(:alias_method, without_method, :setup)
         caller_context.send(:define_method, with_method) do
           send(without_method)
-          setup_shared_values(name, setup_block)
+          setup_shared_value(setup_block)
           shared_setup_block.bind(self).call
         end
         caller_context.send(:alias_method, :setup, with_method)
       else
         caller_context.setup do
-          setup_shared_values(name, setup_block)
+          setup_shared_value(setup_block)
           shared_setup_block.bind(self).call
         end
       end
@@ -316,45 +312,71 @@ end
 
 
 class Shoulda::SharedProxy
-  attr_accessor :shared_name, :description, :initialization_blocks
+  attr_accessor :shared_name, :description, :block_configs, :context
   
-  def initialize(shared_name)
+  def initialize(context, shared_name)
+    self.context = context
     self.shared_name = shared_name
-    self.initialization_blocks = []
+    self.block_configs = []
   end
   
   def with(description = nil, &initialization_block)
-    with_helper("with", description, &initialization_block)
+    add_proxy_block(:with, "with", description, &initialization_block)
   end
   
   def when(description = nil, &initialization_block)
-    with_helper("when", description, &initialization_block)
+    add_proxy_block(:with, "when", description, &initialization_block)
   end
   
   def given(description = nil, &initialization_block)
-    with_helper("given", description, :disable_and => true, &initialization_block)
+    # given needs to execute before its with_setup
+    add_proxy_block(:given, "given", description, :disable_and => true, :insert_block_before_end => @current_action == :with_setup, &initialization_block)
   end
   
-  def execute(context)
+  def with_setup(description)
+    initialization_block = context.send(:find_shared_setup_block, description)
+    add_proxy_block(:with_setup, "with setup", description, :disable_and => true, &initialization_block)
+  end
+  
+  def execute
     method_name = context.send(:shared_method_name, :should, shared_name)
     context.send(method_name, description, &initialization_block)
   end
   
+  def execute_and_set_shared_value(test_context)
+    initialization_block.bind(test_context).call
+  end
+  
   def initialization_block
-    blocks = initialization_blocks
+    the_block_configs = block_configs
     return Proc.new do
-      blocks.collect {|block| block.bind(self).call if block}.last
+      the_block_configs.collect do |block_config|
+        block = block_config[:block]
+        if block_config[:action] == :given
+          setup_shared_value(block)
+        else
+          call_block_with_shared_value(block) if block
+        end
+      end.last
+      # # TODO: needs shared_value
+      # blocks.collect {|block| block.bind(self).call if block}.last
     end
   end
   
-  private
+private
   
-  def with_helper(conditional, description, options = {}, &initialization_block)
+  def add_proxy_block(action, conditional, description, options = {}, &block)
+    @current_action = action
     if description
       and_text = options[:disable_and] ? ' ' : ' and '
       self.description = "#{self.description}#{self.description.nil? ? nil : and_text}#{conditional} #{description}"
     end
-    self.initialization_blocks << initialization_block
+    block_config = {:block => block, :action => action}
+    if options[:insert_block_before_end]
+      self.block_configs.insert(-2, block_config)
+    else
+      self.block_configs << block_config
+    end
     return self
   end
 end

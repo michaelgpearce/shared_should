@@ -111,7 +111,7 @@ Some rules:
 * You can redefine your shares by using the same name. These shares will only be available in in the current and descendant contexts.
 * Shares defined at the root (on your TestCase) are available in all contexts.
 
-### Initialization Block
+### Initialization Blocks
 
 The shared invocation accepts an initialization block by chaining <tt>with</tt> (or its alias <tt>when</tt>) followed by a block. This block can be used to create or modify instance variables used by the shared functionality. It always executes before the shared functionality.
 
@@ -199,6 +199,39 @@ The shared functions also accept multiple parameters when the parameterization b
             use_should("be unavailable for checkout for quantity and price").given("a zero price") { [1, 0] }
         end
     end
+
+### Chaining shared setups with <tt>with_setup</tt>
+
+Shared setup can be chained for use with shared shoulds and shared contexts.
+
+    context "Book" do
+        share_setup "for a rentable book" do
+            @book = Book.new(:quantity => 1, :price => 10_00, :rentable => true, :purchasable => false)
+        end
+
+        share_should "be available for checkout" { assert @book.available_for_checkout? }
+        
+        use_should("be available for checkout").with_setup("for a rentable book")
+    end
+
+And can be parameterized using a <tt>given</tt> clause.
+
+    context "Book" do
+        share_setup "for an in-stock book" do |rentable|
+            @book = Book.new(:quantity => 1, :price => 10_00, :rentable => rentable, :purchasable => false)
+        end
+
+        share_should "be available for checkout" { assert @book.available_for_checkout? }
+    
+        use_should("be available for checkout").with_setup("for an in-stock book").given("the book is rentable") { true }
+    end
+
+Multiple shared setups can then be combined with an initialization block.
+
+    use_should("successfully checkout shopping cart").
+        with_setup("for an empty shopping cart").
+        with_setup("for a rentable book").
+        with("a book in shopping cart") { @shopping_cart.add_book(@book) }
 
 ### Creating a Library of Shared Functionality
 

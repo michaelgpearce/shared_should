@@ -1,20 +1,5 @@
 require 'shoulda'
 
-class Shoulda::Context
-  alias :method_missing_without_shared_method_check :method_missing
-  def method_missing(method, *args, &blk)
-    current_context = self
-    while current_context.kind_of?(Shoulda::Context) || current_context < Test::Unit::TestCase do
-      if Test::Unit::TestCase.shared_context_block_owner(current_context).shared_context_blocks[method.to_s]
-        return current_context.send(method, args[0], self, &blk)
-      end
-      break unless current_context.kind_of?(Shoulda::Context)
-      current_context = current_context.parent
-    end
-    method_missing_without_shared_method_check(method, *args, &blk)
-  end
-end
-
 class Test::Unit::TestCase
   attr_accessor :shared_value
   @@shared_proxies_executed = {}
@@ -108,20 +93,20 @@ module Shoulda::SharedContext
     end
   
     def use_should(shared_name)
-      shared_proxy = Shoulda::SharedProxy.new(self, shared_name)
+      shared_proxy = Shoulda::SharedProxy.new(self, :should, shared_name)
       shared_proxies << shared_proxy
       return shared_proxy
     end
     
     def use_context(shared_name)
-      shared_proxy = Shoulda::SharedProxy.new(self, shared_name)
+      shared_proxy = Shoulda::SharedProxy.new(self, :context, shared_name)
       shared_proxies << shared_proxy
       return shared_proxy
     end
     
     def use_setup(shared_name)
-      shared_proxy = Shoulda::SharedProxy.new(self, shared_name)
-      shared_setup_block = find_shared_setup_block(shared_name)
+      shared_proxy = Shoulda::SharedProxy.new(self, :setup, shared_name)
+      shared_setup_block = find_shared_block(:setup, shared_name)
       setup do
         shared_proxy.execute_and_set_shared_value(self)
         call_block_with_shared_value(shared_setup_block)
@@ -163,11 +148,6 @@ module Shoulda::SharedContext
       end
     end
   
-    # deprecated
-    def shared_context_should(shared_context_name, &shared_context_block)
-      share_context(shared_context_name, &shared_context_block)
-    end
-
     def share_context(shared_context_name, &shared_context_block)
       wrapping_shared_context_block = Proc.new do
         context shared_context_name do
@@ -175,12 +155,7 @@ module Shoulda::SharedContext
         end
       end
 
-      do_shared_context(shared_context_name, shared_context_for_block(shared_context_block), &wrapping_shared_context_block)
-    end
-
-    # deprecated
-    def shared_should(shared_should_name, &shared_should_block)
-      share_should(shared_should_name, &shared_should_block)
+      Test::Unit::TestCase.shared_context_block_owner(shared_context_for_block(shared_context_block)).shared_context_blocks[shared_context_name] = wrapping_shared_context_block
     end
 
     def share_should(shared_should_name, &shared_should_block)
@@ -190,16 +165,7 @@ module Shoulda::SharedContext
         end
       end
 
-      do_shared_context(shared_should_name, shared_context_for_block(shared_should_block), &shared_context_block)
-    end
-
-    # deprecated
-    def shared_setup(shared_name, &setup_block)
-      shared_setup_block = Proc.new do
-        call_block_with_shared_value(setup_block)
-      end
-
-      do_shared_setup(shared_name, shared_context_for_block(setup_block), &shared_setup_block)
+      Test::Unit::TestCase.shared_context_block_owner(shared_context_for_block(shared_should_block)).shared_should_blocks[shared_should_name] = shared_context_block
     end
 
     def share_setup(shared_name, &setup_block)
@@ -219,14 +185,23 @@ module Shoulda::SharedContext
        @shared_setup_blocks ||= {}
     end
 
-    private
+    def find_shared_block(share_type, shared_name)
+      current_context = self
+      while current_context.kind_of?(Shoulda::Context) || current_context < Test::Unit::TestCase do
+        if shared_block = Test::Unit::TestCase.shared_context_block_owner(current_context).send("shared_#{share_type}_blocks")[shared_name]
+          return shared_block
+        end
+        raise "Unable to find share_#{share_type}('#{shared_name}')" if current_context.kind_of?(Class)
+        break unless current_context.kind_of?(Shoulda::Context)
+        current_context = current_context.parent
+      end
+      raise "Unable to find share_#{share_type}('#{shared_name}')"
+    end
+    
+  private
 
     def shared_context_for_block(shared_block)
       eval("self", shared_block.binding)
-    end
-
-    def do_shared_context(shared_context_name, destination_context, &shared_context_block)
-      do_shared_helper(shared_context_name, destination_context, :should, :merge_shared_context, &shared_context_block)
     end
 
     def merge_shared_context(shared_context_block, caller_context, name, initialization_block)
@@ -268,37 +243,6 @@ module Shoulda::SharedContext
       end
     end
 
-    def do_shared_helper(shared_name, destination_context, method_prefix, merge_method, &shared_setup_block)
-      method_name = shared_method_name(method_prefix, shared_name)
-      Test::Unit::TestCase.shared_context_block_owner(destination_context).shared_context_blocks[method_name] = shared_setup_block
-
-      # Ruby 1.8 workaround for define_method with a block
-      # http://coderrr.wordpress.com/2008/10/29/using-define_method-with-blocks-in-ruby-18/
-      eval <<-EOM
-        def destination_context.#{method_name}(name = nil, context = self, &setup_block)
-          #{merge_method}(Test::Unit::TestCase.shared_context_block_owner(self).shared_context_blocks['#{method_name}'], context, name, block_given? ? setup_block : nil)
-        end
-      EOM
-    end
-
-    def shared_method_name(method_prefix, context_name)
-      "#{method_prefix}_#{context_name.downcase.gsub(' ', '_').gsub(/[^_A-Za-z0-9]/, '')}"
-    end
-
-  private
-  
-    def find_shared_setup_block(shared_name)
-      current_context = self
-      while current_context.kind_of?(Shoulda::Context) || current_context < Test::Unit::TestCase do
-        if shared_setup_block = Test::Unit::TestCase.shared_context_block_owner(current_context).shared_setup_blocks[shared_name]
-          return shared_setup_block
-        end
-        raise "Unable to find share_setup('#{shared_name}')" if current_context.kind_of?(Class)
-        break unless current_context.kind_of?(Shoulda::Context)
-        current_context = current_context.parent
-      end
-      raise "Unable to find share_setup('#{shared_name}')"
-    end
   end
 end
 
@@ -312,10 +256,11 @@ end
 
 
 class Shoulda::SharedProxy
-  attr_accessor :shared_name, :description, :block_configs, :context
+  attr_accessor :shared_name, :share_type, :description, :block_configs, :context
   
-  def initialize(context, shared_name)
+  def initialize(context, share_type, shared_name)
     self.context = context
+    self.share_type = share_type
     self.shared_name = shared_name
     self.block_configs = []
   end
@@ -334,13 +279,19 @@ class Shoulda::SharedProxy
   end
   
   def with_setup(description)
-    initialization_block = context.send(:find_shared_setup_block, description)
+    initialization_block = context.find_shared_block(:setup, description)
     add_proxy_block(:with_setup, "with setup", description, :disable_and => true, &initialization_block)
   end
   
   def execute
-    method_name = context.send(:shared_method_name, :should, shared_name)
-    context.send(method_name, description, &initialization_block)
+    raise "execute cannot be called for share_setup" if share_type == :setup
+    shared_proxy = self
+    context.context description do
+      setup do
+        shared_proxy.execute_and_set_shared_value(self)
+      end
+      shared_proxy.context.find_shared_block(shared_proxy.share_type, shared_proxy.shared_name).bind(self).call
+    end
   end
   
   def execute_and_set_shared_value(test_context)
@@ -358,8 +309,6 @@ class Shoulda::SharedProxy
           call_block_with_shared_value(block) if block
         end
       end.last
-      # # TODO: needs shared_value
-      # blocks.collect {|block| block.bind(self).call if block}.last
     end
   end
   

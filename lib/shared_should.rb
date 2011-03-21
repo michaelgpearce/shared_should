@@ -303,7 +303,8 @@ class Shoulda::SharedProxy
     return Proc.new do
       the_block_configs.collect do |block_config|
         block = block_config[:block]
-        if block_config[:action] == :given
+         # really should only allow value set from :given blocks but done for compatability
+        if [:given, :with, :when].include?(block_config[:action])
           setup_shared_value(block)
         else
           call_block_with_shared_value(block) if block

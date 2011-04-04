@@ -55,6 +55,10 @@ class Test::Unit::TestCase
       test_block.bind(self).call()
     end
   end
+  
+  def call_block_shared_value(test_block)
+    self.shared_value = call_block_with_shared_value(test_block)
+  end
 end
 
 module Shoulda::SharedContext
@@ -93,25 +97,19 @@ module Shoulda::SharedContext
     end
   
     def use_should(shared_name)
-      shared_proxy = Shoulda::SharedProxy.new(self, :should, shared_name)
-      shared_proxies << shared_proxy
-      return shared_proxy
+      return add_shared_proxy.use_should(shared_name)
     end
     
     def use_context(shared_name)
-      shared_proxy = Shoulda::SharedProxy.new(self, :context, shared_name)
-      shared_proxies << shared_proxy
-      return shared_proxy
+      return add_shared_proxy.use_context(shared_name)
     end
     
     def use_setup(shared_name)
-      shared_proxy = Shoulda::SharedProxy.new(self, :setup, shared_name)
-      shared_setup_block = find_shared_block(:setup, shared_name)
-      setup do
-        shared_proxy.execute_and_set_shared_value(self)
-        call_block_with_shared_value(shared_setup_block)
-      end
-      return shared_proxy
+      return add_shared_proxy.use_setup(shared_name)
+    end
+  
+    def setup(name = nil, &block)
+      return add_shared_proxy.setup(name, &block)
     end
   
     def context(name = nil, &block)
@@ -138,16 +136,6 @@ module Shoulda::SharedContext
       end
     end
 
-    def setup(&block)
-      if block.nil?
-        setup_without_param_support()
-      else
-        setup_without_param_support() do
-          call_block_with_shared_value(block)
-        end
-      end
-    end
-  
     def share_context(shared_context_name, &shared_context_block)
       wrapping_shared_context_block = Proc.new do
         context shared_context_name do
@@ -199,6 +187,10 @@ module Shoulda::SharedContext
     end
     
   private
+  
+    def add_shared_proxy
+      (shared_proxies << Shoulda::SharedProxy.new(self)).last
+    end
 
     def shared_context_for_block(shared_block)
       eval("self", shared_block.binding)
@@ -256,77 +248,101 @@ end
 
 
 class Shoulda::SharedProxy
-  attr_accessor :shared_name, :share_type, :description, :block_configs, :context
+  attr_accessor :source_context, :setup_block_configs, :test_type, :test_block, :test_description, :current_action
   
-  def initialize(context, share_type, shared_name)
-    self.context = context
-    self.share_type = share_type
-    self.shared_name = shared_name
-    self.block_configs = []
+  def initialize(source_context)
+    self.setup_block_configs = []
+    self.source_context = source_context
   end
   
-  def with(description = nil, &initialization_block)
-    add_proxy_block(:with, "with", description, &initialization_block)
+  def setup(description = nil, &initialization_block)
+    add_setup_block(:setup, description, &initialization_block)
   end
   
-  def when(description = nil, &initialization_block)
-    add_proxy_block(:with, "when", description, &initialization_block)
+  def use_setup(share_name)
+    add_setup_block(:setup, share_name, &source_context.find_shared_block(:setup, share_name))
   end
   
   def given(description = nil, &initialization_block)
     # given needs to execute before its with_setup
-    add_proxy_block(:given, "given", description, :disable_and => true, :insert_block_before_end => @current_action == :with_setup, &initialization_block)
+    # TODO
+    # valid_share_types = [:use_setup, :use_should, :use_context]
+    # raise "'given' can only appear after #{valid_share_types.join(', ')} ---- #{current_action}" unless valid_share_types.include?(current_action)
+    add_setup_block(:given, description ? "given #{description}" : nil, &initialization_block)
   end
   
-  def with_setup(description)
-    initialization_block = context.find_shared_block(:setup, description)
-    add_proxy_block(:with_setup, "with setup", description, :disable_and => true, &initialization_block)
+  def should(description = nil, options = {}, &should_block)
+    add_test_block(:should, description, &should_block)
+  end
+  
+  def use_should(share_name)
+    add_test_block(:should, share_name, &source_context.find_shared_block(:should, share_name))
+  end
+  
+  def context(description = nil, &context_block)
+    add_test_block(:context, description, &should_block)
+  end
+  
+  def use_context(share_name)
+    add_test_block(:context, share_name, &source_context.find_shared_block(:context, share_name))
   end
   
   def execute
-    raise "execute cannot be called for share_setup" if share_type == :setup
     shared_proxy = self
-    context.context description do
-      setup do
-        shared_proxy.execute_and_set_shared_value(self)
-      end
-      shared_proxy.context.find_shared_block(shared_proxy.share_type, shared_proxy.shared_name).bind(self).call
-    end
-  end
-  
-  def execute_and_set_shared_value(test_context)
-    initialization_block.bind(test_context).call
-  end
-  
-  def initialization_block
-    the_block_configs = block_configs
-    return Proc.new do
-      the_block_configs.collect do |block_config|
-        block = block_config[:block]
-         # really should only allow value set from :given blocks but done for compatability
-        if [:given, :with, :when].include?(block_config[:action])
-          setup_shared_value(block)
-        else
-          call_block_with_shared_value(block) if block
+    if test_type == :should || test_type == :context
+      source_context.context setup_block_configs_description do
+        setup_without_param_support do
+          shared_proxy.setup_block_configs.each do |config|
+            call_block_shared_value(config[:block])
+          end
         end
-      end.last
+        
+        # call_block_with_shared_value(shared_proxy.test_block)
+        merge_block(&shared_proxy.test_block)
+        # self.send(shared_proxy.test_type, shared_proxy.test_description, &shared_proxy.test_block)
+      end
+    else
+      source_context.setup_without_param_support do
+        shared_proxy.setup_block_configs.each do |config|
+          call_block_shared_value(config[:block])
+        end
+      end
     end
   end
   
 private
   
-  def add_proxy_block(action, conditional, description, options = {}, &block)
-    @current_action = action
-    if description
-      and_text = options[:disable_and] ? ' ' : ' and '
-      self.description = "#{self.description}#{self.description.nil? ? nil : and_text}#{conditional} #{description}"
+  def setup_block_configs_description
+    descriptions = setup_block_configs.select {|config| config[:description]}.collect {|config| config[:description]}
+    return descriptions.empty? ? nil : descriptions.join(' ')
+  end
+  
+  def add_test_block(test_type, description, &test_block)
+    raise 'Only a single should or context can be chained' if self.test_type
+    
+    self.current_action = test_type
+    self.test_type = test_type
+    self.test_description = description
+    self.test_block = test_block
+    return self
+  end
+
+  def add_setup_block(action, description, &block)
+    if test_type
+      raise "A #{action} may not be applied" unless action == :given
+      # add final given description to test description
+      self.test_description = "#{test_description} #{description}" if description
+      description = nil
     end
-    block_config = {:block => block, :action => action}
-    if options[:insert_block_before_end]
-      self.block_configs.insert(-2, block_config)
+    
+    setup_block_config = {:block => block, :action => action, :description => description}
+    if action == :given and current_action == :setup
+      setup_block_configs.insert(-2, setup_block_config)
     else
-      self.block_configs << block_config
+      setup_block_configs << setup_block_config
     end
+    
+    self.current_action = action
     return self
   end
 end

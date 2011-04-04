@@ -2,10 +2,6 @@ require 'helper'
 
 # Create a subclass for some shares
 class SubclassTestCase < Test::Unit::TestCase
-  share_should "be a true value for shared should helper" do
-    assert @value
-  end
-  
   should "have a test" do
     assert true
   end
@@ -13,6 +9,10 @@ end
 
 # re-open Test::Unit::TestCase class for some shares
 class Test::Unit::TestCase
+  share_should "be a true value for shared should helper" do
+    assert @value
+  end
+  
   share_context "for a true value for shared context helper" do
     should "be true value" do
       assert @value
@@ -22,6 +22,7 @@ class Test::Unit::TestCase
   share_setup "for a true value for shared setup helper" do
     @value = true
   end
+  
 end
 
 class TestSharedShouldHelper < SubclassTestCase

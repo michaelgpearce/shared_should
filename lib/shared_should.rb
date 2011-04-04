@@ -272,7 +272,12 @@ class Shoulda::SharedProxy
   end
   
   def should(description = nil, options = {}, &should_block)
-    add_test_block(:should, description, &should_block)
+    shared_context_block = Proc.new do
+      should description do
+        call_block_with_shared_value(should_block)
+      end
+    end
+    add_test_block(:should, description, &shared_context_block)
   end
   
   def use_should(share_name)
@@ -280,7 +285,7 @@ class Shoulda::SharedProxy
   end
   
   def context(description = nil, &context_block)
-    add_test_block(:context, description, &should_block)
+    add_test_block(:context, description, &context_block)
   end
   
   def use_context(share_name)
@@ -329,7 +334,7 @@ private
 
   def add_setup_block(action, description, &block)
     if test_type
-      raise "A #{action} may not be applied" unless action == :given
+      raise "'#{action}' may not be applied" unless action == :given
       # add final given description to test description
       self.test_description = "#{test_description} #{description}" if description
       description = nil

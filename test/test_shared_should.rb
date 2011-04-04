@@ -248,24 +248,24 @@ class TestSharedShould < Test::Unit::TestCase
       setup do
         @count = 0
       end
-  
+      
       share_setup "shared setup 1" do |count|
         assert_equal 1, @count
         assert_equal count, @count
         @count += 1
       end
-  
+      
       share_setup "shared setup 2" do |count|
         assert_equal 3, @count
         assert_equal count, @count
         @count += 1
       end
-  
+      
       share_should "be valid shared should" do |count|
         assert_equal 7, @count
         assert_equal count, @count
       end
-  
+      
       use_setup("shared setup 1").given("setup value") { assert_equal 0, @count; @count += 1 }.
       use_setup("shared setup 2").given("setup value") { assert_equal 2, @count; @count += 1 }.
       setup("with setup value") { assert_equal 4, @count; @count += 1 }.
@@ -273,12 +273,41 @@ class TestSharedShould < Test::Unit::TestCase
       use_should("be valid shared should").given { assert_equal 6, @count; @count += 1 }
     end
     
-    # context "with should" do
-    #   setup("for true value") { @value = true }.should("be true value") do
-    #     puts self
-    #     assert @value
-    #   end
-    # end
+    context "with should" do
+      setup("for true value") { @value = true }.should("be true value") do
+        assert @value
+      end
+    end
+    
+    context "with shared should" do
+      share_should "be true value" do |value|
+        assert @value
+        assert value
+      end
+      
+      # TODO: test name doesn't have trailing 'given true'
+      setup("for true value") { @value = true }.use_should("be true value").given("true") { true }
+    end
+    
+    context "with context" do
+      setup("for true value") { @value = true }.context do
+        should "be true value" do
+          assert @value
+        end
+      end
+    end
+    
+    context "with shared context" do
+      share_context "for a shared context" do
+        should "have a true value" do |value|
+          assert @value
+          assert value
+        end
+      end
+      
+      # TODO: test name doesn't have trailing 'given true'
+      setup("for true value") { @value = true }.use_context("for a shared context").given("true") { true }
+    end
   end
   
   # ensure should macros work

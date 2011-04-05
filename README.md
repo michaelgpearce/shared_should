@@ -103,7 +103,7 @@ Sharing whole contexts? Schmeasy!
                 use_context "for a book available for checkout"
             end
             
-            ### ...or DRY it up by using .when and an initialization block
+            ### ...or DRY it up with chaining
             setup("with a rentable book") { @book.rentable = true }.use_context("for a book available for checkout")
             setup("with a purchasable book") { @book.purchasable = true }.use_context("for a book available for checkout")
         end

@@ -138,7 +138,7 @@ module Shoulda::SharedContext
 
     def share_context(shared_context_name, &shared_context_block)
       wrapping_shared_context_block = Proc.new do
-        context shared_context_name do
+        context share_description do
           merge_block(&shared_context_block)
         end
       end
@@ -148,7 +148,7 @@ module Shoulda::SharedContext
 
     def share_should(shared_should_name, &shared_should_block)
       shared_context_block = Proc.new do
-        should shared_should_name do
+        should share_description do
           call_block_with_shared_value(shared_should_block)
         end
       end
@@ -264,7 +264,6 @@ class Shoulda::SharedProxy
   end
   
   def given(description = nil, &initialization_block)
-    # given needs to execute before its with_setup
     # TODO
     # valid_share_types = [:use_setup, :use_should, :use_context]
     # raise "'given' can only appear after #{valid_share_types.join(', ')} ---- #{current_action}" unless valid_share_types.include?(current_action)
@@ -273,7 +272,7 @@ class Shoulda::SharedProxy
   
   def should(description = nil, options = {}, &should_block)
     shared_context_block = Proc.new do
-      should description do
+      should share_description do
         call_block_with_shared_value(should_block)
       end
     end
@@ -285,7 +284,12 @@ class Shoulda::SharedProxy
   end
   
   def context(description = nil, &context_block)
-    add_test_block(:context, description, &context_block)
+    shared_context_block = Proc.new do
+      context share_description do
+        merge_block(&context_block)
+      end
+    end
+    add_test_block(:context, description, &shared_context_block)
   end
   
   def use_context(share_name)
@@ -295,6 +299,7 @@ class Shoulda::SharedProxy
   def execute
     shared_proxy = self
     if test_type == :should || test_type == :context
+      # create a new context for setups and should/context
       source_context.context setup_block_configs_description do
         setup_without_param_support do
           shared_proxy.setup_block_configs.each do |config|
@@ -302,11 +307,12 @@ class Shoulda::SharedProxy
           end
         end
         
-        # call_block_with_shared_value(shared_proxy.test_block)
+        # share_description called when creating test names
+        eval("def share_description; #{shared_proxy.send(:escaped_test_description)}; end")
         merge_block(&shared_proxy.test_block)
-        # self.send(shared_proxy.test_type, shared_proxy.test_description, &shared_proxy.test_block)
       end
     else
+      # call setups directly in this context
       source_context.setup_without_param_support do
         shared_proxy.setup_block_configs.each do |config|
           call_block_shared_value(config[:block])
@@ -316,10 +322,13 @@ class Shoulda::SharedProxy
   end
   
 private
+
+  def escaped_test_description
+    test_description.nil? ? 'nil' : "'#{test_description.gsub('\\', '\\\\\\').gsub("'", "\\\\'")}'"
+  end
   
   def setup_block_configs_description
-    descriptions = setup_block_configs.select {|config| config[:description]}.collect {|config| config[:description]}
-    return descriptions.empty? ? nil : descriptions.join(' ')
+    @setup_block_configs_description
   end
   
   def add_test_block(test_type, description, &test_block)
@@ -345,6 +354,9 @@ private
       setup_block_configs.insert(-2, setup_block_config)
     else
       setup_block_configs << setup_block_config
+    end
+    if description
+      @setup_block_configs_description = "#{@setup_block_configs_description}#{' ' if @setup_block_configs_description}#{description}"
     end
     
     self.current_action = action

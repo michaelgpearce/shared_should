@@ -249,13 +249,13 @@ class TestSharedShould < Test::Unit::TestCase
         @count = 0
       end
       
-      share_setup "shared setup 1" do |count|
+      share_setup "for shared setup 1" do |count|
         assert_equal 1, @count
         assert_equal count, @count
         @count += 1
       end
       
-      share_setup "shared setup 2" do |count|
+      share_setup "for shared setup 2" do |count|
         assert_equal 3, @count
         assert_equal count, @count
         @count += 1
@@ -266,11 +266,11 @@ class TestSharedShould < Test::Unit::TestCase
         assert_equal count, @count
       end
       
-      use_setup("shared setup 1").given("setup value") { assert_equal 0, @count; @count += 1 }.
-      use_setup("shared setup 2").given("setup value") { assert_equal 2, @count; @count += 1 }.
-      setup("with setup value") { assert_equal 4, @count; @count += 1 }.
-      setup("with setup value") { assert_equal 5, @count; @count += 1 }.
-      use_should("be valid shared should").given { assert_equal 6, @count; @count += 1 }
+      use_setup("for shared setup 1").given("increment 1") { assert_equal 0, @count; @count += 1 }.
+        use_setup("for shared setup 2").given("increment 2") { assert_equal 2, @count; @count += 1 }.
+        setup("with setup value 3") { assert_equal 4, @count; @count += 1 }.
+        setup("with setup value 4") { assert_equal 5, @count; @count += 1 }.
+        use_should("be valid shared should").given("increment 3") { assert_equal 6, @count; @count += 1 }
     end
     
     context "with should" do
@@ -285,7 +285,6 @@ class TestSharedShould < Test::Unit::TestCase
         assert value
       end
       
-      # TODO: test name doesn't have trailing 'given true'
       setup("for true value") { @value = true }.use_should("be true value").given("true") { true }
     end
     
@@ -305,9 +304,32 @@ class TestSharedShould < Test::Unit::TestCase
         end
       end
       
-      # TODO: test name doesn't have trailing 'given true'
       setup("for true value") { @value = true }.use_context("for a shared context").given("true") { true }
     end
+  end
+  
+  context "with unusual characters in name" do
+    name = "-- \\ ' \" --"
+    
+    share_context name do
+      should "be valid" do
+        assert true
+      end
+    end
+    
+    use_context name
+    
+    share_should name do
+      assert true
+    end
+    
+    use_should name
+    
+    share_setup name do
+      assert true
+    end
+    
+    use_setup name
   end
   
   # ensure should macros work
@@ -344,35 +366,38 @@ class TestSharedShould < Test::Unit::TestCase
     should "have expected methods in test" do
       # ensure test methods are created
       expected_method_names = [
-          'test:  should be a valid should test in class. ',
-          'test: .share_context without params with value in initializer when a true value for a valid value should call setup in shared context. ',
-          'test: .share_context without params with value in initializer when a true value for a valid value should have true value. ',
-          'test: .share_context without params with value in setup for a valid value should call setup in shared context. ',
-          'test: .share_context without params with value in setup for a valid value should have true value. ',
-          'test: .share_setup with param block with chaining should have used share with chain and params. ',
-          'test: .share_setup with param block with shared setup value should have a true value from shared setup. ',
-          'test: .share_setup without params with initialization block should have a true value from shared setup. ',
-          'test: .share_setup without params without initialization block should have a true value from shared setup. ',
-          'test: .share_should without params when value in initializer when value is true should be a true value. ',
-          'test: .share_should without params with value in initializer when value is true should be a true value. ',
-          'test: .share_should without params with value in setup should be a true value. ',
-          'test: SharedShould should execute setup instance method. ',
-          'test: context directly under test class for a valid context test should have a true value. ',
-          'test: context directly under test class should be a valid should test. ',
-          'test: for a valid context test in class should have a true value. ',
-          'test: shoulda macro should be a valid macro. ',
-          'test: expected methods should have expected methods in test. ',
-          "test: .share_context with params given true for a valid specified value should call setup in shared context. ",
-          "test: .share_context with params with chaining with an initialization chain given true for a chained value should chain initialization block and be with params. ",
-          "test: .share_context with params given true for a valid specified value should setup @expected_value. ",
-          "test: .share_should with params with chaining with an initialization chain given true should be a valid specified value. ",
-          "test: .share_context with params given true for a valid specified value should have specified value. ",
-          "test: .share_context with params with chaining when using initialization chain given true for a chained value should chain initialization block and be with params. ",
-          "test: .share_should with params with chaining when using initialization chain given true should be a valid specified value. ",
-          "test: .share_should with params given true should be a valid specified value. ",
-          "test: chaining with parameters with setup shared setup 1 with setup shared setup 2 and with initialization value should be valid shared should with parameter. ",
-          "test: chaining with ordering verification with setup shared setup 1 given setup value with setup shared setup 2 given setup value and with initialization value and with initialization value should be valid shared should. "
-        ].inject({}) do |hash, expected_method_name|
+          "test: .share_should without params with value in setup should be a true value. ",
+          "test: .share_context without params with value in setup for a valid value should call setup in shared context. ",
+          "test: .share_context without params with value in initializer with a true value for a valid value should have true value. ",
+          "test: for a valid context test in class should have a true value. ",
+          "test: .share_should with params should be a valid specified value given true. ",
+          "test: .share_should without params with value in initializer with true value should be a true value. ",
+          "test: .share_should without params when value in initializer with true value should be a true value. ",
+          "test: .share_should with params with chaining with initialization chain should be a valid specified value given true. ",
+          "test: .share_setup with param block with shared setup value should have a true value from shared setup. ",
+          "test: .share_context without params with value in initializer with a true value for a valid value should call setup in shared context. ",
+          "test: .share_context with params with chaining for an initialization chain for a chained value given true should chain initialization block and be with params. ",
+          "test:  should be a valid should test in class. ",
+          "test: .share_setup without params with initialization block should have a true value from shared setup. ",
+          "test: .share_context without params with value in setup for a valid value should have true value. ",
+          "test: shoulda macro should be a valid macro. ",
+          "test: .share_setup with param block with chaining should have used share with chain and params. ",
+          "test: .share_context with params for a valid specified value given true should call setup in shared context. ",
+          "test: chaining with ordering verification for shared setup 1 given increment 1 for shared setup 2 given increment 2 with setup value 3 with setup value 4 should be valid shared should given increment 3. ",
+          "test: .share_context with params for a valid specified value given true should setup @expected_value. ",
+          "test: .share_context with params for a valid specified value given true should have specified value. ",
+          "test: chaining with shared should for true value should be true value given true. ",
+          "test: chaining with should for true value should be true value. ",
+          "test: chaining with context for true value should be true value. ",
+          "test: expected methods should have expected methods in test. ",
+          "test: chaining with shared context for true value for a shared context given true should have a true value. ",
+          "test: context directly under test class should be a valid should test. ",
+          "test: context directly under test class for a valid context test should have a true value. ",
+          "test: .share_setup without params without initialization block should have a true value from shared setup. ",
+          "test: SharedShould should execute setup instance method. ",
+          "test: with unusual characters in name -- \\ ' \" -- should be valid. ",
+          "test: with unusual characters in name should -- \\ ' \" --. "
+      ].inject({}) do |hash, expected_method_name|
         hash[expected_method_name] = true
         hash
       end
@@ -385,13 +410,13 @@ class TestSharedShould < Test::Unit::TestCase
       actual_method_names.each do |method_name, value|
         actual_methods_not_found << method_name unless expected_method_names.include?(method_name)
       end
-      # assert_equal [], actual_methods_not_found, "Unknown methods exist in the test suite"
+      assert_equal [], actual_methods_not_found, "Unknown methods exist in the test suite"
       
       expected_methods_not_found = []
       expected_method_names.each do |method_name, value|
          expected_methods_not_found << method_name unless actual_method_names.include?(method_name)
       end
-      # assert_equal [], expected_methods_not_found, "Unknown methods exist in the list of expected tests"
+      assert_equal [], expected_methods_not_found, "Unknown methods exist in the list of expected tests"
       
     end
   end

@@ -123,7 +123,7 @@ Some rules:
 
 Shared Should provides powerful chaining capabilities.
 
-Chained <tt>setup</tt>s and <tt>use\_setup</tt>s are applied to their parent context:
+Chained setups and use\_setups are applied to their parent context.
 
     context "Book" do
         share_setup "for an in-stock book" do
@@ -137,7 +137,7 @@ Chained <tt>setup</tt>s and <tt>use\_setup</tt>s are applied to their parent con
         end
     end
 
-Or chained <tt>setup</tt>s and <tt>use\_setup</tt>s can be chained to a <tt>should</tt>, <tt>use\_should</tt>, <tt>context</tt>, or <tt>use\_context</tt>:
+Or chained setups and use\_setups can be chained to a <tt>should</tt>, <tt>use\_should</tt>, <tt>context</tt>, or <tt>use\_context</tt>. These setups will not be applied to the parent context.
 
     context "Book" do
         share_setup "for an in-stock book" do
@@ -151,7 +151,7 @@ Or chained <tt>setup</tt>s and <tt>use\_setup</tt>s can be chained to a <tt>shou
 
 ### Parameterizing Shares
 
-Shared functions can also be parameterized using block parameters. This can be done for shared setups, shared shoulds, and the <tt>setup</tt>s and <tt>should</tt>s contained within a shared context. The value passed to the shared function is the return value of the <tt>given</tt> parameterization block. The below example parameterizes a shared setup.
+Shared functions can also be parameterized using block parameters. This can be done for shared setups, shared shoulds, and the setups and shoulds contained within a shared context. The value passed to the shared function is the return value of the <tt>given</tt> parameterization block. The below example parameterizes a shared setup.
 
     context "Book" do
         share_setup "for an in-stock book" do |rentable|

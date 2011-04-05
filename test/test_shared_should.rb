@@ -273,6 +273,66 @@ class TestSharedShould < Test::Unit::TestCase
         use_should("be valid shared should").given("increment 3") { assert_equal 6, @count; @count += 1 }
     end
     
+    context "with invalid given" do
+      begin
+        setup {}.setup { assert false }.given {}
+        raise "Should not allow given after setup"
+      rescue ArgumentError
+        # correct
+      end
+      
+      begin
+        setup {}.should("fail") { assert false }.given {}
+        raise "Should not allow given after should"
+      rescue ArgumentError
+        # correct
+      end
+      
+      begin
+        setup {}.context do
+          should("fail") { assert false }
+        end.given {}
+        raise "Should not allow given after should"
+      rescue ArgumentError
+        # correct
+      end
+      
+      begin
+        share_setup("for setup") { assert false }
+        use_setup("for setup").given {}.given {}
+        raise "Should not allow given after another given"
+      rescue ArgumentError
+        # correct
+      end
+    end
+    
+    context "with invalid setup chain to should" do
+      begin
+        setup {}.should("1") { assert false }.setup { assert false }
+        raise "Should not allow setup chained after should"
+      rescue ArgumentError
+        # correct
+      end
+    end
+    
+    context "with invalid chain to should" do
+      begin
+        setup {}.should("1") { assert false }.should("2") { assert false }
+        raise "Should not allow chained shoulds"
+      rescue ArgumentError
+        # correct
+      end
+    end
+    
+    context "with invalid chained contexts" do
+      begin
+        setup {}.context("1") { should("1") { assert false } }.should("2") { assert false }
+        raise "Should not allow chain to context"
+      rescue ArgumentError
+        # correct
+      end
+    end
+    
     context "with should" do
       setup("for true value") { @value = true }.should("be true value") do
         assert @value

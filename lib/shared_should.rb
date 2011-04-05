@@ -260,13 +260,13 @@ class Shoulda::SharedProxy
   end
   
   def use_setup(share_name)
-    add_setup_block(:setup, share_name, &source_context.find_shared_block(:setup, share_name))
+    add_setup_block(:use_setup, share_name, &source_context.find_shared_block(:setup, share_name))
   end
   
   def given(description = nil, &initialization_block)
-    # TODO
-    # valid_share_types = [:use_setup, :use_should, :use_context]
-    # raise "'given' can only appear after #{valid_share_types.join(', ')} ---- #{current_action}" unless valid_share_types.include?(current_action)
+    valid_share_types = [:use_setup, :use_should, :use_context]
+    @failed = true and raise ArgumentError, "'given' can only appear after #{valid_share_types.join(', ')}" unless valid_share_types.include?(current_action)
+    
     add_setup_block(:given, description ? "given #{description}" : nil, &initialization_block)
   end
   
@@ -280,7 +280,7 @@ class Shoulda::SharedProxy
   end
   
   def use_should(share_name)
-    add_test_block(:should, share_name, &source_context.find_shared_block(:should, share_name))
+    add_test_block(:use_should, share_name, &source_context.find_shared_block(:should, share_name))
   end
   
   def context(description = nil, &context_block)
@@ -293,12 +293,14 @@ class Shoulda::SharedProxy
   end
   
   def use_context(share_name)
-    add_test_block(:context, share_name, &source_context.find_shared_block(:context, share_name))
+    add_test_block(:use_context, share_name, &source_context.find_shared_block(:context, share_name))
   end
   
   def execute
+    return if @failed
+    
     shared_proxy = self
-    if test_type == :should || test_type == :context
+    if test_type == :should || test_type == :context || test_type == :use_should || test_type == :use_context
       # create a new context for setups and should/context
       source_context.context setup_block_configs_description do
         setup_without_param_support do
@@ -332,10 +334,10 @@ private
   end
   
   def add_test_block(test_type, description, &test_block)
-    raise 'Only a single should or context can be chained' if self.test_type
+    @failed = true and raise ArgumentError, 'Only a single should or context can be chained' if self.test_type
     
-    self.current_action = test_type
     self.test_type = test_type
+    self.current_action = test_type
     self.test_description = description
     self.test_block = test_block
     return self
@@ -343,14 +345,14 @@ private
 
   def add_setup_block(action, description, &block)
     if test_type
-      raise "'#{action}' may not be applied" unless action == :given
+      @failed = true and raise ArgumentError, "'#{action}' may not be applied" unless action == :given
       # add final given description to test description
       self.test_description = "#{test_description} #{description}" if description
       description = nil
     end
     
     setup_block_config = {:block => block, :action => action, :description => description}
-    if action == :given and current_action == :setup
+    if action == :given and (current_action == :setup || current_action == :use_setup)
       setup_block_configs.insert(-2, setup_block_config)
     else
       setup_block_configs << setup_block_config

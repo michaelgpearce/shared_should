@@ -107,7 +107,7 @@ module Shoulda::SharedContext
     def use_setup(shared_name)
       return add_shared_proxy.use_setup(shared_name)
     end
-  
+    
     def setup(name = nil, &block)
       return add_shared_proxy.setup(name, &block)
     end
@@ -263,6 +263,21 @@ class Shoulda::SharedProxy
     add_setup_block(:use_setup, share_name, &source_context.find_shared_block(:setup, share_name))
   end
   
+  # deprecated
+  def with_setup(share_name)
+    return use_setup(share_name)
+  end
+  
+  # deprecated
+  def with(share_name = nil, &initialization_block)
+    return setup(share_name ? "with #{share_name}" : nil, &initialization_block)
+  end
+
+  # deprecated
+  def when(share_name = nil, &initialization_block)
+    return setup(share_name ? "when #{share_name}" : nil, &initialization_block)
+  end
+
   def given(description = nil, &initialization_block)
     valid_share_types = [:use_setup, :use_should, :use_context]
     @failed = true and raise ArgumentError, "'given' can only appear after #{valid_share_types.join(', ')}" unless valid_share_types.include?(current_action)
@@ -345,7 +360,7 @@ private
 
   def add_setup_block(action, description, &block)
     if test_type
-      @failed = true and raise ArgumentError, "'#{action}' may not be applied" unless action == :given
+      #@failed = true and raise ArgumentError, "'#{action}' may not be applied" unless action == :given
       # add final given description to test description
       self.test_description = "#{test_description} #{description}" if description
       description = nil

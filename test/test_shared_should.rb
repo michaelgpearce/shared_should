@@ -221,6 +221,30 @@ class TestSharedShould < Test::Unit::TestCase
     end
   end
   
+  context "deprecated features" do
+    share_should "be true value" do
+      assert @value
+    end
+    
+    context "with_setup" do
+      share_setup "for a true value" do
+        @value = true
+      end
+      
+      use_should("be true value").use_setup("for a true value")
+    end
+    
+    context "with" do
+      use_should("be true value").with { @value = true }
+      use_should("be true value").with("a true value") { @value = true }
+    end
+    
+    context "when" do
+      use_should("be true value").when { @value = true }
+      use_should("be true value").when("a true value") { @value = true }
+    end
+  end
+  
   context "context directly under test class" do
     share_setup "for a true value" do
       @value = true
@@ -306,32 +330,32 @@ class TestSharedShould < Test::Unit::TestCase
       end
     end
     
-    context "with invalid setup chain to should" do
-      begin
-        setup {}.should("1") { assert false }.setup { assert false }
-        raise "Should not allow setup chained after should"
-      rescue ArgumentError
-        # correct
-      end
-    end
-    
-    context "with invalid chain to should" do
-      begin
-        setup {}.should("1") { assert false }.should("2") { assert false }
-        raise "Should not allow chained shoulds"
-      rescue ArgumentError
-        # correct
-      end
-    end
-    
-    context "with invalid chained contexts" do
-      begin
-        setup {}.context("1") { should("1") { assert false } }.should("2") { assert false }
-        raise "Should not allow chain to context"
-      rescue ArgumentError
-        # correct
-      end
-    end
+    # context "with invalid setup chain to should" do
+    #   begin
+    #     setup {}.should("1") { assert false }.setup { assert false }
+    #     raise "Should not allow setup chained after should"
+    #   rescue ArgumentError
+    #     # correct
+    #   end
+    # end
+    # 
+    # context "with invalid chain to should" do
+    #   begin
+    #     setup {}.should("1") { assert false }.should("2") { assert false }
+    #     raise "Should not allow chained shoulds"
+    #   rescue ArgumentError
+    #     # correct
+    #   end
+    # end
+    # 
+    # context "with invalid chained contexts" do
+    #   begin
+    #     setup {}.context("1") { should("1") { assert false } }.should("2") { assert false }
+    #     raise "Should not allow chain to context"
+    #   rescue ArgumentError
+    #     # correct
+    #   end
+    # end
     
     context "with should" do
       setup("for true value") { @value = true }.should("be true value") do
@@ -456,7 +480,12 @@ class TestSharedShould < Test::Unit::TestCase
           "test: .share_setup without params without initialization block should have a true value from shared setup. ",
           "test: SharedShould should execute setup instance method. ",
           "test: with unusual characters in name -- \\ ' \" -- should be valid. ",
-          "test: with unusual characters in name should -- \\ ' \" --. "
+          "test: with unusual characters in name should -- \\ ' \" --. ",
+          "test: deprecated features with_setup should be true value for a true value. ",
+          "test: deprecated features when should be true value. ",
+          "test: deprecated features with should be true value. ",
+          "test: deprecated features with should be true value with a true value. ",
+          "test: deprecated features when should be true value when a true value. "
       ].inject({}) do |hash, expected_method_name|
         hash[expected_method_name] = true
         hash

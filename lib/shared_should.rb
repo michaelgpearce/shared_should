@@ -14,7 +14,7 @@ class Test::Unit::TestCase
     # assuming 'suite' is called before executing any tests - may be a poor assumption. Find something better?
     unless @@shared_proxies_executed[self]
       shared_proxies.each do |shared_proxy|
-        shared_proxy.execute
+        shared_proxy.share_execute
       end
       @@shared_proxies_executed[self] = true
     end
@@ -45,6 +45,7 @@ class Test::Unit::TestCase
   end
   
   def call_block_with_shared_value(test_block)
+    return nil unless test_block
     execute_class_shared_setups_if_not_executed
     if test_block.arity == 1
       # check arity of 1 before checking if value is an array. If one parameter, never treat the shared_value as variable args
@@ -56,8 +57,9 @@ class Test::Unit::TestCase
     end
   end
   
-  def call_block_shared_value(test_block)
-    self.shared_value = call_block_with_shared_value(test_block)
+  def call_block_config(block_config)
+    ret_val = call_block_with_shared_value(block_config[:block])
+    self.shared_value = ret_val if block_config[:action] == :given
   end
 end
 
@@ -118,7 +120,7 @@ module Shoulda::SharedContext
           block.bind(self).call
         
           shared_proxies.each do |shared_proxy|
-            shared_proxy.execute
+            shared_proxy.share_execute
           end
         end
         shared_proxies_executing_block.bind(eval("self", block.binding))
@@ -311,7 +313,7 @@ class Shoulda::SharedProxy
     add_test_block(:use_context, share_name, &source_context.find_shared_block(:context, share_name))
   end
   
-  def execute
+  def share_execute
     return if @failed
     
     shared_proxy = self
@@ -320,7 +322,7 @@ class Shoulda::SharedProxy
       source_context.context setup_block_configs_description do
         setup_without_param_support do
           shared_proxy.setup_block_configs.each do |config|
-            call_block_shared_value(config[:block])
+            call_block_config(config)
           end
         end
         
@@ -332,7 +334,7 @@ class Shoulda::SharedProxy
       # call setups directly in this context
       source_context.setup_without_param_support do
         shared_proxy.setup_block_configs.each do |config|
-          call_block_shared_value(config[:block])
+          call_block_config(config)
         end
       end
     end

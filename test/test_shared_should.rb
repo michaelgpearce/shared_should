@@ -490,9 +490,16 @@ class TestSharedShould < Test::Unit::TestCase
         hash[expected_method_name] = true
         hash
       end
-      actual_method_names = self.class.suite.tests.inject({}) do |hash, test_case|
-        hash[test_case.method_name] = true
-        hash
+      if defined?(self.class.suite)
+        actual_method_names = self.class.suite.tests.inject({}) do |hash, test_case|
+          hash[test_case.method_name] = true
+          hash
+        end
+      else
+        actual_method_names = self.class.test_methods.inject({}) do |hash, method_name|
+          hash[method_name] = true
+          hash
+        end
       end
   
       actual_methods_not_found = []

@@ -22,7 +22,6 @@ class Test::Unit::TestCase
   share_setup "for a true value for shared setup helper" do
     @value = true
   end
-  
 end
 
 class TestSharedShouldHelper < SubclassTestCase

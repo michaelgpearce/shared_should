@@ -1,25 +1,51 @@
 require 'shoulda'
 
+# Ruby 1.9 with MiniTest
+if defined?(MiniTest::Unit::TestCase)
+  class MiniTest::Unit::TestCase
+    class << self
+      # these methods need to be aliased for both the test class and the should context
+      alias_method :test_suites_without_shared_should_execute, :test_suites
+    end
+  
+    def self.test_suites
+      Test::Unit::TestCase.execute_class_shared_proxies
+    
+      test_suites_without_shared_should_execute
+    end
+  end
+end
+
+# Ruby 1.8 without MiniTest
+if defined?(Test::Unit::TestCase.suite)
+  class Test::Unit::TestCase
+    class << self
+      # these methods need to be aliased for both the test class and the should context
+      alias_method :suite_without_shared_should_execute, :suite
+    end
+  
+    def self.suite
+      # assuming 'suite' is called before executing any tests - may be a poor assumption. Find something better?
+      execute_class_shared_proxies
+    
+      suite_without_shared_should_execute
+    end
+  end
+end
+
+
 class Test::Unit::TestCase
   attr_accessor :shared_value
   @@shared_proxies_executed = {}
   @@setup_blocks = {}
 
-  class << self
-    # these methods need to be aliased for both the test class and the should context
-    alias_method :suite_without_shared_should_execute, :suite
-  end
-  
-  def self.suite
-    # assuming 'suite' is called before executing any tests - may be a poor assumption. Find something better?
+  def self.execute_class_shared_proxies
     unless @@shared_proxies_executed[self]
       shared_proxies.each do |shared_proxy|
         shared_proxy.share_execute
       end
       @@shared_proxies_executed[self] = true
     end
-    
-    suite_without_shared_should_execute
   end
   
   def self.shared_context_block_owner(context_or_test_class)
@@ -327,7 +353,8 @@ class Shoulda::SharedProxy
         end
         
         # share_description called when creating test names
-        eval("def share_description; #{shared_proxy.send(:escaped_test_description)}; end")
+        self.instance_variable_set("@share_description", shared_proxy.send(:test_description))
+        def self.share_description; @share_description; end
         merge_block(&shared_proxy.test_block)
       end
     else
@@ -342,10 +369,6 @@ class Shoulda::SharedProxy
   
 private
 
-  def escaped_test_description
-    test_description.nil? ? 'nil' : "'#{test_description.gsub('\\', '\\\\\\').gsub("'", "\\\\'")}'"
-  end
-  
   def setup_block_configs_description
     @setup_block_configs_description
   end

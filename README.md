@@ -180,7 +180,7 @@ end
 
 Here is a parameterized shared should.
 
-```
+```ruby
 context "Book" do
   context "with in-stock book" do
     setup { @book = Book.new(:quantity => 1) }

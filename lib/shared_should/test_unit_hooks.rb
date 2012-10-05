@@ -40,11 +40,16 @@ if defined?(Test::Unit::TestCase.suite)
   end
 end
 
-
 class Test::Unit::TestCase
   extend SharedShould::SharedContext
 end
 
-class Shoulda::Context
-  include SharedShould::SharedContext
+if defined?(Shoulda::Context::Context)
+  class Shoulda::Context::Context
+    include SharedShould::SharedContext
+  end
+elsif defined?(Shoulda::Context)
+  class Shoulda::Context
+    include SharedShould::SharedContext
+  end
 end
